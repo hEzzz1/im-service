@@ -1,12 +1,10 @@
 package org.team324.service.user.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.team324.common.ResponseVO;
@@ -115,6 +113,8 @@ public class ImUserServiceImpl implements ImUserService {
         return ResponseVO.successResponse(ImUserDataEntity);
     }
 
+
+    // TODO 为什么删除用户 是修改删除标识 而不是直接将其从数据库中删除
     @Override
     public ResponseVO deleteUser(DeleteUserReq req) {
         ImUserDataEntity entity = new ImUserDataEntity();

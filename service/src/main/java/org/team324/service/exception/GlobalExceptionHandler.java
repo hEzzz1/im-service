@@ -1,4 +1,4 @@
-package org.team324.service.user.exception;
+package org.team324.service.exception;
 
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.validation.BindException;
