@@ -20,4 +20,11 @@ public interface ImFriendShipService {
     public ResponseVO getRelation(GetRelationReq req);
 
     public ResponseVO checkFriendship(CheckFriendShipReq req);
+
+    public ResponseVO addBlack(AddFriendShipBlackReq req);
+
+    public ResponseVO deleteBlack(DeleteBlackReq req);
+
+    public ResponseVO checkBlck(CheckFriendShipReq req);
+
 }

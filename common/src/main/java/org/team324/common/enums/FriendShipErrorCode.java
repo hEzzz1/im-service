@@ -13,7 +13,15 @@ public enum FriendShipErrorCode implements ApplicationExceptionEnum {
 
     FRIEND_IS_DELETE(30004,"对方已被删除"),
 
+    FRIEND_IS_BLACK(30006,"好友已被拉黑"),
+
     REPEATSHIP_IS_NOT_EXIST(30008,"关系链记录不存在"),
+
+    ADD_BLACK_ERROR(30009,"添加黑名單失败"),
+
+    FRIEND_IS_NOT_YOUR_BLACK(30010,"好友已经不在你的黑名单内"),
+
+
 
     ;
 
