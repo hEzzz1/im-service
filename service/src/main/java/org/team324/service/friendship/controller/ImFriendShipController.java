@@ -1,5 +1,6 @@
 package org.team324.service.friendship.controller;
 
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.team324.common.ResponseVO;
 import org.team324.service.friendship.model.req.AddFriendReq;
+import org.team324.service.friendship.model.req.DeleteFriendReq;
 import org.team324.service.friendship.model.req.ImportFriendShipReq;
 import org.team324.service.friendship.model.req.UpdateFriendReq;
 import org.team324.service.friendship.service.ImFriendShipService;
@@ -38,6 +40,18 @@ public class ImFriendShipController {
     public ResponseVO updateFriend(@RequestBody @Validated UpdateFriendReq req, Integer appId) {
         req.setAppId(appId);
         return imFriendShipService.updateFriend(req);
+    }
+
+    @RequestMapping("/deleteFriend")
+    public ResponseVO deleteFriend(@RequestBody @Validated DeleteFriendReq req, Integer appId) {
+        req.setAppId(appId);
+        return imFriendShipService.deleteFriend(req);
+    }
+
+    @RequestMapping("/deleteAllFriend")
+    public ResponseVO deleteAllFriend(@RequestBody @Validated DeleteFriendReq req, Integer appId) {
+        req.setAppId(appId);
+        return imFriendShipService.deleteAllFriend(req);
     }
 
 }
