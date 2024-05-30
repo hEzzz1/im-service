@@ -8,11 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.team324.common.ResponseVO;
+import org.team324.common.enums.CheckFriendShipTypeEnum;
 import org.team324.common.enums.FriendShipErrorCode;
 import org.team324.common.enums.FriendShipStatusEnum;
 import org.team324.service.friendship.dao.dao.ImFriendShipEntity;
 import org.team324.service.friendship.dao.dao.mapper.ImFriendShipMapper;
 import org.team324.service.friendship.model.req.*;
+import org.team324.service.friendship.model.resp.CheckFriendShipResp;
 import org.team324.service.friendship.model.resp.ImportFriendShipResp;
 import org.team324.service.friendship.service.ImFriendShipService;
 import org.team324.service.user.dao.ImUserDataEntity;
@@ -20,6 +22,9 @@ import org.team324.service.user.service.ImUserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author crystalZ
@@ -173,6 +178,36 @@ public class ImFriendServiceImpl implements ImFriendShipService {
         }
 
         return ResponseVO.successResponse(entity);
+    }
+
+    @Override
+    public ResponseVO checkFriendship(CheckFriendShipReq req) {
+
+        Map<String, Integer> result
+                = req.getToIds().stream()
+                .collect(Collectors.toMap(Function.identity(), s -> 0));
+
+        List<CheckFriendShipResp> resp = new ArrayList<>();
+
+        if (req.getCheckType() == CheckFriendShipTypeEnum.SINGLE.getType()) {
+            resp = imFriendShipMapper.checkFriendShip(req);
+        }else {
+            resp = imFriendShipMapper.checkFriendShip(req);
+        }
+        Map<String, Integer> collect
+                = resp.stream()
+                .collect(Collectors.toMap(CheckFriendShipResp::getToId,
+                        CheckFriendShipResp::getStatus));
+        for (String toId : result.keySet()){
+            if(!collect.containsKey(toId)){
+                CheckFriendShipResp checkFriendShipResp = new CheckFriendShipResp();
+                checkFriendShipResp.setFromId(req.getFromId());
+                checkFriendShipResp.setToId(toId);
+                checkFriendShipResp.setStatus(result.get(toId));
+                resp.add(checkFriendShipResp);
+            }
+        }
+        return ResponseVO.successResponse(resp);
     }
 
     @Transactional
