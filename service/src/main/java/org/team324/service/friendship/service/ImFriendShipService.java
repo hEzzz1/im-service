@@ -1,10 +1,7 @@
 package org.team324.service.friendship.service;
 
 import org.team324.common.ResponseVO;
-import org.team324.service.friendship.model.req.AddFriendReq;
-import org.team324.service.friendship.model.req.DeleteFriendReq;
-import org.team324.service.friendship.model.req.ImportFriendShipReq;
-import org.team324.service.friendship.model.req.UpdateFriendReq;
+import org.team324.service.friendship.model.req.*;
 
 public interface ImFriendShipService {
 
@@ -17,4 +14,8 @@ public interface ImFriendShipService {
     public ResponseVO deleteFriend(DeleteFriendReq req);
 
     public ResponseVO deleteAllFriend(DeleteFriendReq req);
+
+    public ResponseVO getAllFriendShip(GetAllFriendShipReq req);
+
+    public ResponseVO getRelation(GetRelationReq req);
 }

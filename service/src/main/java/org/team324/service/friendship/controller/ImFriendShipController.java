@@ -7,10 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.team324.common.ResponseVO;
-import org.team324.service.friendship.model.req.AddFriendReq;
-import org.team324.service.friendship.model.req.DeleteFriendReq;
-import org.team324.service.friendship.model.req.ImportFriendShipReq;
-import org.team324.service.friendship.model.req.UpdateFriendReq;
+import org.team324.service.friendship.model.req.*;
 import org.team324.service.friendship.service.ImFriendShipService;
 
 /**
@@ -52,6 +49,18 @@ public class ImFriendShipController {
     public ResponseVO deleteAllFriend(@RequestBody @Validated DeleteFriendReq req, Integer appId) {
         req.setAppId(appId);
         return imFriendShipService.deleteAllFriend(req);
+    }
+
+    @RequestMapping("/getAllFriendShip")
+    public ResponseVO getAllFriendShip(@RequestBody @Validated GetAllFriendShipReq req, Integer appId) {
+        req.setAppId(appId);
+        return imFriendShipService.getAllFriendShip(req);
+    }
+
+    @RequestMapping("/getRelation")
+    public ResponseVO getRelation(@RequestBody @Validated GetRelationReq req, Integer appId) {
+        req.setAppId(appId);
+        return imFriendShipService.getRelation(req);
     }
 
 }

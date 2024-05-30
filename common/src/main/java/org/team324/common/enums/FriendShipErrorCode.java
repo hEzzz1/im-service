@@ -12,6 +12,9 @@ public enum FriendShipErrorCode implements ApplicationExceptionEnum {
     TO_IS_NOT_YOUR_FRIEND(30003,"对方不是你的好友"),
 
     FRIEND_IS_DELETE(30004,"对方已被删除"),
+
+    REPEATSHIP_IS_NOT_EXIST(30008,"关系链记录不存在"),
+
     ;
 
     private int code;

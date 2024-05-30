@@ -103,7 +103,7 @@ public class ImFriendServiceImpl implements ImFriendShipService {
             return toInfo;
         }
 
-        this.doUpdateFriend(req.getFromId(),req.getToItem(),req.getAppId());
+        this.doUpdateFriend(req.getFromId(), req.getToItem(), req.getAppId());
         return null;
     }
 
@@ -117,13 +117,13 @@ public class ImFriendServiceImpl implements ImFriendShipService {
         if (fromItem == null) {
             // 返回不是好友
             return ResponseVO.errorResponse(FriendShipErrorCode.TO_IS_NOT_YOUR_FRIEND);
-        }else {
+        } else {
             if (fromItem.getStatus() == FriendShipStatusEnum.FRIEND_STATUS_NORMAL.getCode()) {
                 // 执行删除操作
                 ImFriendShipEntity update = new ImFriendShipEntity();
                 update.setStatus(FriendShipStatusEnum.FRIEND_STATUS_DELETE.getCode());
-                imFriendShipMapper.update(update,query);
-            }else {
+                imFriendShipMapper.update(update, query);
+            } else {
                 // 返回已被删除
                 return ResponseVO.errorResponse(FriendShipErrorCode.FRIEND_IS_DELETE);
 
@@ -144,21 +144,42 @@ public class ImFriendServiceImpl implements ImFriendShipService {
 
         ImFriendShipEntity update = new ImFriendShipEntity();
         update.setStatus(FriendShipStatusEnum.FRIEND_STATUS_DELETE.getCode());
-        imFriendShipMapper.update(update,query);
+        imFriendShipMapper.update(update, query);
 
         return ResponseVO.successResponse();
+    }
+
+    @Override
+    public ResponseVO getAllFriendShip(GetAllFriendShipReq req) {
+
+        QueryWrapper<ImFriendShipEntity> query = new QueryWrapper<>();
+        query.eq("app_id", req.getAppId());
+        query.eq("from_id", req.getFromId());
+        return ResponseVO.successResponse(imFriendShipMapper.selectList(query));
+    }
+
+    @Override
+    public ResponseVO getRelation(GetRelationReq req) {
+        QueryWrapper<ImFriendShipEntity> query = new QueryWrapper<>();
+        query.eq("app_id", req.getAppId());
+        query.eq("from_id", req.getFromId());
+        query.eq("to_id", req.getToId());
+
+
+        ImFriendShipEntity entity = imFriendShipMapper.selectOne(query);
+        if (entity == null) {
+            // 返回记录不存在
+            return ResponseVO.errorResponse(FriendShipErrorCode.REPEATSHIP_IS_NOT_EXIST);
+        }
+
+        return ResponseVO.successResponse(entity);
     }
 
     @Transactional
     public ResponseVO doUpdateFriend(String fromId, FriendDto dto, Integer appId) {
 
         UpdateWrapper<ImFriendShipEntity> updateWrapper = new UpdateWrapper<>();
-        updateWrapper.lambda().set(ImFriendShipEntity::getAddSource,dto.getAddSource())
-                .set(ImFriendShipEntity::getExtra,dto.getExtra())
-                .set(ImFriendShipEntity::getRemark,dto.getRemark())
-                .eq(ImFriendShipEntity::getAppId,appId)
-                .eq(ImFriendShipEntity::getFromId,fromId)
-                .eq(ImFriendShipEntity::getToId,dto.getToId());
+        updateWrapper.lambda().set(ImFriendShipEntity::getAddSource, dto.getAddSource()).set(ImFriendShipEntity::getExtra, dto.getExtra()).set(ImFriendShipEntity::getRemark, dto.getRemark()).eq(ImFriendShipEntity::getAppId, appId).eq(ImFriendShipEntity::getFromId, fromId).eq(ImFriendShipEntity::getToId, dto.getToId());
 
         imFriendShipMapper.update(null, updateWrapper);
         return ResponseVO.successResponse();
@@ -194,9 +215,7 @@ public class ImFriendServiceImpl implements ImFriendShipService {
             if (fromItem.getStatus() == FriendShipStatusEnum.FRIEND_STATUS_NORMAL.getCode()) {
                 // 返回已添加
                 return ResponseVO.errorResponse(FriendShipErrorCode.TO_IS_YOUR_FRIEND);
-            }
-
-            else {
+            } else {
                 ImFriendShipEntity update = new ImFriendShipEntity();
 
 
@@ -216,7 +235,7 @@ public class ImFriendServiceImpl implements ImFriendShipService {
 
                 int result = imFriendShipMapper.update(update, query);
                 if (result != 1) {
-                     //返回添加失败
+                    //返回添加失败
                     return ResponseVO.errorResponse(FriendShipErrorCode.ADD_FRIEND_ERROR);
                 }
 
