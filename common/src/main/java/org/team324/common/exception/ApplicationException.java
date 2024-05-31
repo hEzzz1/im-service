@@ -1,9 +1,9 @@
 package org.team324.common.exception;
 
 /**
- * @author: Chackylee
- * @description:
- **/
+ * @author crystalZ
+ * @date 2024/5/31
+ */
 public class ApplicationException extends RuntimeException {
 
     private int code;

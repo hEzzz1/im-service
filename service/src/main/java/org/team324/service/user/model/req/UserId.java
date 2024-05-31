@@ -4,9 +4,9 @@ import lombok.Data;
 import org.team324.common.model.RequestBase;
 
 /**
- * @author: Chackylee
- * @description:
- **/
+ * @author crystalZ
+ * @date 2024/5/28
+ */
 @Data
 public class UserId extends RequestBase {
 

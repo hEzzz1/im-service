@@ -6,6 +6,10 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 
+/**
+ * @author crystalZ
+ * @date 2024/5/31
+ */
 @Data
 @TableName("im_friendship_request")
 public class ImFriendShipRequestEntity {

@@ -6,9 +6,9 @@ import org.team324.service.user.dao.ImUserDataEntity;
 import java.util.List;
 
 /**
- * @author: Chackylee
- * @description:
- **/
+ * @author crystalZ
+ * @date 2024/5/28
+ */
 @Data
 public class GetUserInfoResp {
 

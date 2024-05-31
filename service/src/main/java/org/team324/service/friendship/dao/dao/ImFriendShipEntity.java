@@ -6,9 +6,9 @@ import com.github.jeffreyning.mybatisplus.anno.AutoMap;
 import lombok.Data;
 
 /**
- * @author: Chackylee
- * @description:
- **/
+ * @author crystalZ
+ * @date 2024/5/31
+ */
 
 @Data
 @TableName("im_friendship")

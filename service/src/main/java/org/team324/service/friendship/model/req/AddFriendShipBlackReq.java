@@ -6,7 +6,10 @@ import org.team324.common.model.RequestBase;
 
 import javax.validation.constraints.NotBlank;
 
-
+/**
+ * @author crystalZ
+ * @date 2024/5/31
+ */
 @Data
 public class AddFriendShipBlackReq extends RequestBase {
 

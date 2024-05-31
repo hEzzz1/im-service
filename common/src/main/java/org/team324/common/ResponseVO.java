@@ -6,6 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.team324.common.exception.ApplicationExceptionEnum;
 
+/**
+ * @author crystalZ
+ * @date 2024/5/31
+ */
 @Data
 @Builder
 @AllArgsConstructor

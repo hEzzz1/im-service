@@ -6,7 +6,10 @@ import org.team324.common.model.RequestBase;
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
-
+/**
+ * @author crystalZ
+ * @date 2024/5/28
+ */
 @Data
 public class DeleteUserReq extends RequestBase {
 

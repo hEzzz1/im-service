@@ -11,7 +11,10 @@ import org.team324.service.friendship.model.req.GetFriendShipRequestReq;
 import org.team324.service.friendship.model.req.ReadFriendShipRequestReq;
 import org.team324.service.friendship.service.ImFriendShipRequestService;
 
-
+/**
+ * @author crystalZ
+ * @date 2024/5/31
+ */
 @RestController
 @RequestMapping("v1/friendshipRequest")
 public class ImFriendShipRequestController {

@@ -6,9 +6,8 @@ import org.team324.common.model.RequestBase;
 import javax.validation.constraints.NotBlank;
 
 /**
- * @description:
- * @author: lld
- * @version: 1.0
+ * @author crystalZ
+ * @date 2024/5/31
  */
 @Data
 public class GetFriendShipRequestReq extends RequestBase {

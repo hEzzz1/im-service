@@ -6,9 +6,8 @@ import org.team324.common.model.RequestBase;
 import javax.validation.constraints.NotEmpty;
 
 /**
- * @description:
- * @author: lld
- * @version: 1.0
+ * @author crystalZ
+ * @date 2024/5/28
  */
 @Data
 public class ModifyUserInfoReq extends RequestBase {

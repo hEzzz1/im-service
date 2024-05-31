@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
- * @author: Chackylee
- * @description: 数据库用户数据实体类
- **/
+ * @author crystalZ
+ * @date 2024/5/28
+ */
 
 @Data
 @TableName("im_user_data")
