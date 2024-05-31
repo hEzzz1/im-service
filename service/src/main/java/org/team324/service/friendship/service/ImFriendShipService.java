@@ -9,6 +9,8 @@ public interface ImFriendShipService {
 
     public ResponseVO addFriend(AddFriendReq req);
 
+    public ResponseVO doAddFriend(String fromId, FriendDto dto, Integer appId);
+
     public ResponseVO updateFriend(UpdateFriendReq req);
 
     public ResponseVO deleteFriend(DeleteFriendReq req);
