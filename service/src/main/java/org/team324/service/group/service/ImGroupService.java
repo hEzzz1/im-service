@@ -18,4 +18,8 @@ public interface ImGroupService {
 
     public ResponseVO getJoinedGroup(GetJoinedGroupReq req);
 
+    public ResponseVO destroyGroup(DestroyGroupReq req);
+
+    public ResponseVO transferGroup(TransferGroupReq req);
+
 }

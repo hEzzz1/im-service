@@ -1,13 +1,13 @@
 package org.team324.service.group.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.tomcat.util.descriptor.tld.TldRuleSet;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.team324.common.ResponseVO;
 import org.team324.common.enums.GroupErrorCode;
 import org.team324.common.enums.GroupMemberRoleEnum;
@@ -39,7 +39,6 @@ public class ImGroupServiceImpl implements ImGroupService {
 
     @Autowired
     ImGroupMemberService imGroupMemberService;
-
 
     @Override
     public ResponseVO importGroup(ImportGroupReq req) {
@@ -223,5 +222,68 @@ public class ImGroupServiceImpl implements ImGroupService {
 
 
         return ResponseVO.successResponse(list);
+    }
+
+    @Override
+    @Transactional
+    public ResponseVO destroyGroup(DestroyGroupReq req) {
+
+        boolean isAdmin = false;
+
+        QueryWrapper<ImGroupEntity> objectQueryWrapper = new QueryWrapper<>();
+        objectQueryWrapper.eq("group_id", req.getGroupId());
+        objectQueryWrapper.eq("app_id", req.getAppId());
+        ImGroupEntity imGroupEntity = imGroupMapper.selectOne(objectQueryWrapper);
+        if (imGroupEntity == null) {
+            throw new ApplicationException(GroupErrorCode.PRIVATE_GROUP_CAN_NOT_DESTORY);
+        }
+
+        if (!isAdmin) {
+            if (imGroupEntity.getGroupType() == GroupTypeEnum.PRIVATE.getCode()) {
+                throw new ApplicationException(GroupErrorCode.THIS_OPERATE_NEED_OWNER_ROLE);
+            }
+
+            if (imGroupEntity.getGroupType() == GroupTypeEnum.PUBLIC.getCode() &&
+                    !imGroupEntity.getOwnerId().equals(req.getOperater())) {
+                throw new ApplicationException(GroupErrorCode.THIS_OPERATE_NEED_OWNER_ROLE);
+            }
+        }
+        ImGroupEntity update = new ImGroupEntity();
+        update.setStatus(GroupStatusEnum.DESTROY.getCode());
+        int update1 = imGroupMapper.update(update, objectQueryWrapper);
+        if (update1 != 1) {
+            throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_BASE_INFO_ERROR);
+        }
+
+        return ResponseVO.successResponse();
+    }
+
+    @Override
+    @Transactional
+    public ResponseVO transferGroup(TransferGroupReq req) {
+
+        ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
+        if (!roleInGroupOne.isOk()) {
+            return roleInGroupOne;
+        }
+
+        if (roleInGroupOne.getData().getRole() != GroupMemberRoleEnum.OWNER.getCode()) {
+            return ResponseVO.errorResponse(GroupErrorCode.THIS_OPERATE_NEED_OWNER_ROLE);
+        }
+
+        ResponseVO<GetRoleInGroupResp> newOwnerRole = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOwnerId(), req.getAppId());
+        if (!newOwnerRole.isOk()) {
+            return newOwnerRole;
+        }
+
+        ImGroupEntity updateGroup = new ImGroupEntity();
+        updateGroup.setOwnerId(req.getOwnerId());
+        UpdateWrapper<ImGroupEntity> updateGroupWrapper = new UpdateWrapper<>();
+        updateGroupWrapper.eq("app_id", req.getAppId());
+        updateGroupWrapper.eq("group_id", req.getGroupId());
+        imGroupMapper.update(updateGroup, updateGroupWrapper);
+        imGroupMemberService.transferGroupMember(req.getOwnerId(), req.getGroupId(), req.getAppId());
+
+        return ResponseVO.successResponse();
     }
 }
