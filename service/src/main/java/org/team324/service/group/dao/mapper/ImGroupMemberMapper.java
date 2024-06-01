@@ -6,16 +6,19 @@ import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
+import org.team324.common.ResponseVO;
 import org.team324.service.group.dao.ImGroupMemberEntity;
+import org.team324.service.group.model.req.GetJoinedGroupReq;
 import org.team324.service.group.model.req.GroupMemberDto;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper
 public interface ImGroupMemberMapper extends BaseMapper<ImGroupMemberEntity> {
 
     @Select("select group_id from im_group_member where app_id = #{appId} AND member_id = #{memberId} ")
-    public List<String> getJoinedGroupId(Integer appId, String memberId);
+    public ResponseVO<Collection<String>> getJoinedGroupId(GetJoinedGroupReq req);
 
     @Select("select group_id from im_group_member where app_id = #{appId} AND member_id = #{memberId} and role != #{role}" )
     public List<String> syncJoinedGroupId(Integer appId, String memberId, int role);

@@ -1,5 +1,6 @@
 package org.team324.service.group.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +22,8 @@ import org.team324.service.group.model.resp.GetRoleInGroupResp;
 import org.team324.service.group.service.ImGroupMemberService;
 import org.team324.service.group.service.ImGroupService;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -158,8 +161,7 @@ public class ImGroupServiceImpl implements ImGroupService {
             boolean isManage = role == GroupMemberRoleEnum.MAMAGER.getCode();
             boolean isOwner = role == GroupMemberRoleEnum.OWNER.getCode();
 
-            if (GroupTypeEnum.PUBLIC.getCode() == group.getData().getGroupType()
-            &&  !(isOwner || isManage)) {
+            if (GroupTypeEnum.PUBLIC.getCode() == group.getData().getGroupType() && !(isOwner || isManage)) {
 
                 return ResponseVO.errorResponse(GroupErrorCode.THIS_OPERATE_NEED_MANAGER_ROLE);
             }
@@ -183,7 +185,7 @@ public class ImGroupServiceImpl implements ImGroupService {
     public ResponseVO getGroup(GetGroupReq req) {
         ResponseVO group = this.getGroup(req.getGroupId(), req.getAppId());
 
-        if(!group.isOk()){
+        if (!group.isOk()) {
             return group;
         }
 
@@ -198,5 +200,28 @@ public class ImGroupServiceImpl implements ImGroupService {
             e.printStackTrace();
         }
         return ResponseVO.successResponse(getGroupResp);
+    }
+
+    @Override
+    public ResponseVO getJoinedGroup(GetJoinedGroupReq req) {
+
+        // 获取到所有加入的群id
+        ResponseVO<Collection<String>> memberJoinedGroup = imGroupMemberService.getMemberJoinedGroup(req);
+
+        List<ImGroupEntity> list = new ArrayList<>();
+
+        QueryWrapper<ImGroupEntity> query = new QueryWrapper<>();
+        query.eq("app_id", req.getAppId());
+        if (CollectionUtil.isEmpty(req.getGroupType())) {
+            query.in("group_type", req.getGroupType());
+        }
+        query.in("group_id", memberJoinedGroup.getData());
+
+
+        list = imGroupMapper.selectList(query);
+        // 根据群id获取群信息
+
+
+        return ResponseVO.successResponse(list);
     }
 }

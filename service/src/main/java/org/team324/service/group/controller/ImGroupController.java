@@ -6,10 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.team324.common.ResponseVO;
-import org.team324.service.group.model.req.CreateGroupReq;
-import org.team324.service.group.model.req.GetGroupReq;
-import org.team324.service.group.model.req.ImportGroupReq;
-import org.team324.service.group.model.req.UpdateGroupReq;
+import org.team324.service.group.model.req.*;
 import org.team324.service.group.service.ImGroupService;
 
 /**
@@ -50,13 +47,12 @@ public class ImGroupController {
         return groupService.getGroup(req);
     }
 
-//
-//    @RequestMapping("/getJoinedGroup")
-//    public ResponseVO getJoinedGroup(@RequestBody @Validated GetJoinedGroupReq req, Integer appId, String identifier)  {
-//        req.setAppId(appId);
-//        req.setOperater(identifier);
-//        return groupService.getJoinedGroup(req);
-//    }
+    @RequestMapping("/getJoinedGroup")
+    public ResponseVO getJoinedGroup(@RequestBody @Validated GetJoinedGroupReq req, Integer appId, String identifier)  {
+        req.setAppId(appId);
+        req.setOperater(identifier);
+        return groupService.getJoinedGroup(req);
+    }
 //
 //
 //    @RequestMapping("/destroyGroup")

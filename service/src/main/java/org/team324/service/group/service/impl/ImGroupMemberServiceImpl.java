@@ -1,6 +1,8 @@
 package org.team324.service.group.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,6 +12,7 @@ import org.team324.common.enums.GroupMemberRoleEnum;
 import org.team324.service.group.dao.ImGroupEntity;
 import org.team324.service.group.dao.ImGroupMemberEntity;
 import org.team324.service.group.dao.mapper.ImGroupMemberMapper;
+import org.team324.service.group.model.req.GetJoinedGroupReq;
 import org.team324.service.group.model.req.GroupMemberDto;
 import org.team324.service.group.model.req.ImportGroupMemberReq;
 import org.team324.service.group.model.resp.AddMemberResp;
@@ -17,8 +20,7 @@ import org.team324.service.group.model.resp.GetRoleInGroupResp;
 import org.team324.service.group.service.ImGroupMemberService;
 import org.team324.service.group.service.ImGroupService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author crystalZ
@@ -138,5 +140,10 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
     public ResponseVO<List<GroupMemberDto>> getGroupMember(String groupId, Integer appId) {
         List<GroupMemberDto> groupMember = imGroupMemberMapper.getGroupMember(appId, groupId);
         return ResponseVO.successResponse(groupMember);
+    }
+
+    @Override
+    public ResponseVO<Collection<String>> getMemberJoinedGroup(GetJoinedGroupReq req) {
+        return imGroupMemberMapper.getJoinedGroupId(req);
     }
 }
