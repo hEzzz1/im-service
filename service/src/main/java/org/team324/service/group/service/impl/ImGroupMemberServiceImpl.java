@@ -13,6 +13,7 @@ import org.team324.service.group.dao.mapper.ImGroupMemberMapper;
 import org.team324.service.group.model.req.GroupMemberDto;
 import org.team324.service.group.model.req.ImportGroupMemberReq;
 import org.team324.service.group.model.resp.AddMemberResp;
+import org.team324.service.group.model.resp.GetRoleInGroupResp;
 import org.team324.service.group.service.ImGroupMemberService;
 import org.team324.service.group.service.ImGroupService;
 
@@ -112,5 +113,30 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         }
 
         return ResponseVO.errorResponse(GroupErrorCode.USER_IS_JOINED_GROUP);
+    }
+
+    @Override
+    public ResponseVO<GetRoleInGroupResp> getRoleInGroupOne(String groupId, String memberId, Integer appId) {
+        GetRoleInGroupResp resp = new GetRoleInGroupResp();
+
+        QueryWrapper<ImGroupMemberEntity> queryOwner = new QueryWrapper<>();
+        queryOwner.eq("group_id", groupId);
+        queryOwner.eq("app_id", appId);
+        queryOwner.eq("member_id", memberId);
+
+        ImGroupMemberEntity entity = imGroupMemberMapper.selectOne(queryOwner);
+
+        if (entity == null || entity.getRole() == GroupMemberRoleEnum.LEAVE.getCode()) {
+            return ResponseVO.errorResponse(GroupErrorCode.MEMBER_IS_NOT_JOINED_GROUP);
+        }
+
+        BeanUtils.copyProperties(entity,resp);
+        return ResponseVO.successResponse(resp);
+    }
+
+    @Override
+    public ResponseVO<List<GroupMemberDto>> getGroupMember(String groupId, Integer appId) {
+        List<GroupMemberDto> groupMember = imGroupMemberMapper.getGroupMember(appId, groupId);
+        return ResponseVO.successResponse(groupMember);
     }
 }

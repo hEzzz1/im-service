@@ -1,19 +1,27 @@
 package org.team324.service.group.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.tomcat.util.descriptor.tld.TldRuleSet;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.team324.common.ResponseVO;
 import org.team324.common.enums.GroupErrorCode;
+import org.team324.common.enums.GroupMemberRoleEnum;
 import org.team324.common.enums.GroupStatusEnum;
+import org.team324.common.enums.GroupTypeEnum;
 import org.team324.common.exception.ApplicationException;
 import org.team324.service.group.dao.ImGroupEntity;
 import org.team324.service.group.dao.mapper.ImGroupMapper;
-import org.team324.service.group.model.req.ImportGroupReq;
+import org.team324.service.group.model.req.*;
+import org.team324.service.group.model.resp.GetGroupResp;
+import org.team324.service.group.model.resp.GetRoleInGroupResp;
+import org.team324.service.group.service.ImGroupMemberService;
 import org.team324.service.group.service.ImGroupService;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -26,24 +34,28 @@ public class ImGroupServiceImpl implements ImGroupService {
     @Autowired
     ImGroupMapper imGroupMapper;
 
+    @Autowired
+    ImGroupMemberService imGroupMemberService;
+
+
     @Override
     public ResponseVO importGroup(ImportGroupReq req) {
 
-        if(StringUtils.isNotBlank(req.getGroupId())) {
+        if (StringUtils.isNotBlank(req.getGroupId())) {
             QueryWrapper<ImGroupEntity> query = new QueryWrapper<>();
             // 判断群id是否已经在系统中存在
             query.eq("group_id", req.getGroupId());
-            query.eq("app_id",req.getAppId());
+            query.eq("app_id", req.getAppId());
             if (imGroupMapper.selectCount(query) > 0) {
                 // 返回记录已存在
                 return ResponseVO.errorResponse(GroupErrorCode.GROUP_IS_EXIST);
             }
-        }else {
-            req.setGroupId(UUID.randomUUID().toString().replace("-",""));
+        } else {
+            req.setGroupId(UUID.randomUUID().toString().replace("-", ""));
         }
 
         ImGroupEntity imGroupEntity = new ImGroupEntity();
-        BeanUtils.copyProperties(req,imGroupEntity);
+        BeanUtils.copyProperties(req, imGroupEntity);
 
         if (req.getCreateTime() == null) {
             imGroupEntity.setCreateTime(System.currentTimeMillis());
@@ -64,7 +76,53 @@ public class ImGroupServiceImpl implements ImGroupService {
     }
 
     @Override
-    public ResponseVO getGroup(String groupId, Integer appId) {
+    public ResponseVO createGroup(CreateGroupReq req) {
+        boolean isAdmin = false;
+
+        if (!isAdmin) {
+            req.setOwnerId(req.getOperater());
+        }
+
+        //1.判断群id是否存在
+        QueryWrapper<ImGroupEntity> query = new QueryWrapper<>();
+
+        if (StringUtils.isEmpty(req.getGroupId())) {
+            req.setGroupId(UUID.randomUUID().toString().replace("-", ""));
+        } else {
+            query.eq("group_id", req.getGroupId());
+            query.eq("app_id", req.getAppId());
+            Integer integer = imGroupMapper.selectCount(query);
+            if (integer > 0) {
+                throw new ApplicationException(GroupErrorCode.GROUP_IS_EXIST);
+            }
+        }
+
+        if (req.getGroupType() == GroupTypeEnum.PUBLIC.getCode() && StringUtils.isBlank(req.getOwnerId())) {
+            throw new ApplicationException(GroupErrorCode.PUBLIC_GROUP_MUST_HAVE_OWNER);
+        }
+
+        ImGroupEntity imGroupEntity = new ImGroupEntity();
+        imGroupEntity.setCreateTime(System.currentTimeMillis());
+        imGroupEntity.setStatus(GroupStatusEnum.NORMAL.getCode());
+        BeanUtils.copyProperties(req, imGroupEntity);
+        int insert = imGroupMapper.insert(imGroupEntity);
+
+        GroupMemberDto groupMemberDto = new GroupMemberDto();
+        groupMemberDto.setMemberId(req.getOwnerId());
+        groupMemberDto.setRole(GroupMemberRoleEnum.OWNER.getCode());
+        groupMemberDto.setJoinTime(System.currentTimeMillis());
+        imGroupMemberService.addGroupMember(req.getGroupId(), req.getAppId(), groupMemberDto);
+
+        //插入群成员
+        for (GroupMemberDto dto : req.getMember()) {
+            imGroupMemberService.addGroupMember(req.getGroupId(), req.getAppId(), dto);
+        }
+
+        return ResponseVO.successResponse();
+    }
+
+    @Override
+    public ResponseVO<ImGroupEntity> getGroup(String groupId, Integer appId) {
         QueryWrapper<ImGroupEntity> query = new QueryWrapper<>();
         query.eq("app_id", appId);
         query.eq("group_id", groupId);
@@ -74,5 +132,71 @@ public class ImGroupServiceImpl implements ImGroupService {
             return ResponseVO.errorResponse(GroupErrorCode.GROUP_IS_NOT_EXIST);
         }
         return ResponseVO.successResponse(imGroupEntity);
+    }
+
+    @Override
+    public ResponseVO updateGroupInfo(UpdateGroupReq req) {
+
+        ResponseVO<ImGroupEntity> group = this.getGroup(req.getGroupId(), req.getAppId());
+        if (!group.isOk()) {
+            return group;
+        }
+
+        boolean isAdmin = false;
+
+        if (!isAdmin) {
+            // 校验权限
+            ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
+            if (!roleInGroupOne.isOk()) {
+                return roleInGroupOne;
+            }
+
+            GetRoleInGroupResp roleDate = roleInGroupOne.getData();
+
+            int role = roleDate.getRole();
+
+            boolean isManage = role == GroupMemberRoleEnum.MAMAGER.getCode();
+            boolean isOwner = role == GroupMemberRoleEnum.OWNER.getCode();
+
+            if (GroupTypeEnum.PUBLIC.getCode() == group.getData().getGroupType()
+            &&  !(isOwner || isManage)) {
+
+                return ResponseVO.errorResponse(GroupErrorCode.THIS_OPERATE_NEED_MANAGER_ROLE);
+            }
+
+        }
+
+        ImGroupEntity imGroupEntity = new ImGroupEntity();
+        BeanUtils.copyProperties(req, imGroupEntity);
+        QueryWrapper<ImGroupEntity> query = new QueryWrapper<>();
+        query.eq("app_id", req.getAppId());
+        query.eq("group_id", req.getGroupId());
+        int update = imGroupMapper.update(imGroupEntity, query);
+        if (update != 1) {
+            throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_BASE_INFO_ERROR);
+        }
+
+        return ResponseVO.successResponse();
+    }
+
+    @Override
+    public ResponseVO getGroup(GetGroupReq req) {
+        ResponseVO group = this.getGroup(req.getGroupId(), req.getAppId());
+
+        if(!group.isOk()){
+            return group;
+        }
+
+        GetGroupResp getGroupResp = new GetGroupResp();
+        BeanUtils.copyProperties(group.getData(), getGroupResp);
+        try {
+            ResponseVO<List<GroupMemberDto>> groupMember = imGroupMemberService.getGroupMember(req.getGroupId(), req.getAppId());
+            if (groupMember.isOk()) {
+                getGroupResp.setMemberList(groupMember.getData());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseVO.successResponse(getGroupResp);
     }
 }

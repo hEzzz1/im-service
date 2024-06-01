@@ -2,12 +2,21 @@ package org.team324.service.group.service;
 
 import org.team324.common.ResponseVO;
 import org.team324.service.group.dao.ImGroupEntity;
+import org.team324.service.group.model.req.CreateGroupReq;
+import org.team324.service.group.model.req.GetGroupReq;
 import org.team324.service.group.model.req.ImportGroupReq;
+import org.team324.service.group.model.req.UpdateGroupReq;
 
 public interface ImGroupService {
 
     public ResponseVO importGroup(ImportGroupReq req);
 
+    public ResponseVO createGroup(CreateGroupReq req);
+
     public  ResponseVO<ImGroupEntity> getGroup(String groupId, Integer appId);
+
+    public ResponseVO updateGroupInfo(UpdateGroupReq req);
+
+    public ResponseVO getGroup(GetGroupReq req);
 
 }
