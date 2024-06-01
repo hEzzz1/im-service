@@ -1,4 +1,4 @@
-package org.team324.service.friendship.dao.dao;
+package org.team324.service.friendship.dao;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

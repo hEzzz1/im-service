@@ -1,10 +1,10 @@
-package org.team324.service.friendship.dao.dao.mapper;
+package org.team324.service.friendship.dao.mapper;
 
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
-import org.team324.service.friendship.dao.dao.ImFriendShipEntity;
+import org.team324.service.friendship.dao.ImFriendShipEntity;
 import org.team324.service.friendship.model.req.CheckFriendShipReq;
 import org.team324.service.friendship.model.resp.CheckFriendShipResp;
 
