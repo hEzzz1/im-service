@@ -286,4 +286,48 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         return ResponseVO.successResponse();
     }
+
+    @Override
+    public ResponseVO muteGroup(MuteGroupReq req) {
+
+        ResponseVO<ImGroupEntity> groupResp = getGroup(req.getGroupId(), req.getAppId());
+        if (!groupResp.isOk()) {
+            return groupResp;
+        }
+
+        if(groupResp.getData().getStatus() == GroupStatusEnum.DESTROY.getCode()){
+            throw new ApplicationException(GroupErrorCode.GROUP_IS_DESTROY);
+        }
+
+        boolean isadmin = false;
+
+        if (!isadmin) {
+            //不是后台调用需要检查权限
+            ResponseVO<GetRoleInGroupResp> role = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
+
+            if (!role.isOk()) {
+                return role;
+            }
+
+            GetRoleInGroupResp data = role.getData();
+            Integer roleInfo = data.getRole();
+
+            boolean isManager = roleInfo == GroupMemberRoleEnum.MAMAGER.getCode() || roleInfo == GroupMemberRoleEnum.OWNER.getCode();
+
+            //公开群只能群主修改资料
+            if (!isManager) {
+                throw new ApplicationException(GroupErrorCode.THIS_OPERATE_NEED_MANAGER_ROLE);
+            }
+        }
+
+        ImGroupEntity update = new ImGroupEntity();
+        update.setMute(req.getMute());
+
+        UpdateWrapper<ImGroupEntity> wrapper = new UpdateWrapper<>();
+        wrapper.eq("group_id",req.getGroupId());
+        wrapper.eq("app_id",req.getAppId());
+        imGroupMapper.update(update,wrapper);
+
+        return ResponseVO.successResponse();
+    }
 }
