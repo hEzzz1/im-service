@@ -1,0 +1,16 @@
+lim:
+  tcpPort: 9000
+  webSocketPort: 19000
+  bossThreadSize: 1
+  workThreadSize: 8
+  heartBeatTime: 3000 # 心跳超时时间 ms
+  redis:
+    mode: single
+    database: 1
+#    password: 123456
+    timeout: 3000
+    poolMinIdle: 8
+    poolConnTimeout: 3000
+    poolSize: 10
+    single :
+      address: 192.168.192.129:6379
