@@ -17,10 +17,19 @@ import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.util.Set;
 
+/**
+ * 全局异常处理类
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
 
+    /**
+     * 处理未知的异常
+     * 当系统抛出未知异常时 调用此方法
+     * @param e 抛出异常的实例
+     * @return
+     */
     @ExceptionHandler(value=Exception.class)
     @ResponseBody
     public ResponseVO unknowException(Exception e){
@@ -28,17 +37,15 @@ public class GlobalExceptionHandler {
         ResponseVO resultBean =new ResponseVO();
         resultBean.setCode(BaseErrorCode.SYSTEM_ERROR.getCode());
         resultBean.setMsg(BaseErrorCode.SYSTEM_ERROR.getError());
-        /**
-         * 未知异常的话，这里写逻辑，发邮件，发短信都可以、、
-         */
+        // TODO 未知异常的话，这里写逻辑，发邮件，发短信都可以
         return resultBean;
     }
 
 
     /**
-     * Validator 参数校验异常处理
-     *
-     * @param ex
+     * 处理 Spring Validator 参数校验异常处理
+     * 当使用@Valid或@Validated注解进行参数校验失败时，调用此方法
+     * @param ex ConstraintViolationException异常实例
      * @return
      */
     @ExceptionHandler(value = ConstraintViolationException.class)
@@ -61,6 +68,12 @@ public class GlobalExceptionHandler {
         return resultBean;
     }
 
+    /**
+     * 处理自定义的应用程序异常
+     * 当应用程序中抛出自定义的异常时，将调用此方法
+     * @param e ApplicationException异常实例
+     * @return
+     */
     @ExceptionHandler(ApplicationException.class)
     @ResponseBody
     public Object applicationExceptionHandler(ApplicationException e) {
@@ -72,9 +85,9 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Validator 参数校验异常处理
-     *
-     * @param ex
+     * 处理BindException异常
+     * 当使用@ModelAttribute注解的参数绑定失败时，将调用此方法。
+     * @param ex BindException异常实例
      * @return
      */
     @ExceptionHandler(value = BindException.class)
@@ -90,7 +103,12 @@ public class GlobalExceptionHandler {
 
     }
 
-    //json格式
+    /**
+     * 处理Spring MVC的MethodArgumentNotValidException异常
+     * 当方法参数的校验失败时，将调用此方法
+     * @param ex MethodArgumentNotValidException异常实例
+     * @return
+     */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     @ResponseBody
     public Object  handleException1(MethodArgumentNotValidException ex) {

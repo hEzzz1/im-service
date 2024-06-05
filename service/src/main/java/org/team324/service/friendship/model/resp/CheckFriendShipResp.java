@@ -3,6 +3,7 @@ package org.team324.service.friendship.model.resp;
 import lombok.Data;
 
 /**
+ * 响应好友校验关系
  * @author crystalZ
  * @date 2024/5/30
  */

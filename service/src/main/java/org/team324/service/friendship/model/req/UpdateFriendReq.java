@@ -7,6 +7,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
+ * 修改好友申请
  * @author crystalZ
  * @date 2024/5/30
  */
@@ -14,8 +15,8 @@ import javax.validation.constraints.NotNull;
 public class UpdateFriendReq extends RequestBase {
 
     @NotBlank(message = "fromId不能为空")
-    private String fromId;
+    private String fromId;  // 修改人id
 
     @NotNull(message = "toItem不能为空")
-    private FriendDto toItem;
+    private FriendDto toItem;   // 被修改人id
 }

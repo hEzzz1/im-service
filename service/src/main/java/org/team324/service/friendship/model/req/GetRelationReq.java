@@ -10,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * 获取好友关系请求
  * @author crystalZ
  * @date 2024/5/30
  */
@@ -17,9 +18,9 @@ import java.lang.annotation.Target;
 public class GetRelationReq extends RequestBase {
 
     @NotBlank(message = "formId不能为空")
-    private String fromId;
+    private String fromId; // 操作人id
 
     @NotBlank(message = "toId不能为空")
-    private String toId;
+    private String toId; // 被操作人id
 
 }

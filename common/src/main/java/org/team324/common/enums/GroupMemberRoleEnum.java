@@ -1,5 +1,8 @@
 package org.team324.common.enums;
 
+/**
+ * 群组成员关系枚举类
+ */
 public enum GroupMemberRoleEnum {
 
     /**

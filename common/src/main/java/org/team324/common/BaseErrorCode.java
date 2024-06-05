@@ -2,6 +2,10 @@ package org.team324.common;
 
 import org.team324.common.exception.ApplicationExceptionEnum;
 
+/**
+ * 基础错误码
+ * 实现应用异常枚举类
+ */
 public enum BaseErrorCode implements ApplicationExceptionEnum {
 
     SUCCESS(200,"success"),

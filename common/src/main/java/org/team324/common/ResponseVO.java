@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.team324.common.exception.ApplicationExceptionEnum;
 
 /**
+ * 响应类
  * @author crystalZ
  * @date 2024/5/31
  */

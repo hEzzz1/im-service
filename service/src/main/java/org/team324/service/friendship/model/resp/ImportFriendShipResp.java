@@ -5,6 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
+ * 响应导入好友关系
  * @author crystalZ
  * @date 2024/5/29
  */

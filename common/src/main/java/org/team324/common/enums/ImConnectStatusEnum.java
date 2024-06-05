@@ -1,15 +1,17 @@
 package org.team324.common.enums;
 
 /**
- * @author crystalZ
- * @date 2024/6/2
+ * 即时通讯im链接管道状态
  */
 public enum ImConnectStatusEnum {
     /**
-     * 管道链接状态 1-在线 2-离线
+     * 1-在线
      */
     ONLINE_STATUS(1),
 
+    /**
+     * 2-离线
+     */
     OFFLINE_STATUS(2),
 
     ;

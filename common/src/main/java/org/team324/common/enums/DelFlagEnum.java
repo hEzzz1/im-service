@@ -1,12 +1,18 @@
 package org.team324.common.enums;
 
+/**
+ * 删除枚举类
+ */
 public enum DelFlagEnum {
 
     /**
-     * 0 正常；1 删除。
+     * 0 正常
      */
     NORMAL(0),
 
+    /**
+     * 1 删除
+     */
     DELETE(1),
     ;
 

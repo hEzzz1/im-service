@@ -4,9 +4,8 @@ package org.team324.common.enums;
 import org.team324.common.exception.ApplicationExceptionEnum;
 
 /**
- * @author: Chackylee
- * @description:
- **/
+ * 群组错误代码枚举类
+ */
 public enum GroupErrorCode implements ApplicationExceptionEnum {
 
     GROUP_IS_NOT_EXIST(40000,"群不存在"),

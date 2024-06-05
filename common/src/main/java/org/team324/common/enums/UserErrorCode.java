@@ -3,6 +3,9 @@ package org.team324.common.enums;
 
 import org.team324.common.exception.ApplicationExceptionEnum;
 
+/**
+ * 用户错误代码
+ */
 public enum UserErrorCode implements ApplicationExceptionEnum {
 
 

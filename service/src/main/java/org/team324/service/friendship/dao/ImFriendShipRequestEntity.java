@@ -7,6 +7,7 @@ import lombok.Data;
 
 
 /**
+ * im_friendship_request 映射表
  * @author crystalZ
  * @date 2024/5/31
  */

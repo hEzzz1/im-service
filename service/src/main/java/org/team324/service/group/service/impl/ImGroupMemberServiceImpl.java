@@ -1,7 +1,5 @@
 package org.team324.service.group.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -250,7 +248,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
             if (GroupTypeEnum.PUBLIC.getCode() == group.getGroupType()) {
 
                 //获取操作人的权限 是管理员or群主or群成员
-                ResponseVO<GetRoleInGroupResp> role = getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
+                ResponseVO<GetRoleInGroupResp> role = getRoleInGroupOne(req.getGroupId(), req.getOperator(), req.getAppId());
                 if (!role.isOk()) {
                     return role;
                 }
@@ -322,7 +320,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         if (!group.isOk()) {
             return group;
         }
-        ResponseVO<GetRoleInGroupResp> roleInGroupOne = getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
+        ResponseVO<GetRoleInGroupResp> roleInGroupOne = getRoleInGroupOne(req.getGroupId(), req.getOperator(), req.getAppId());
         if (!roleInGroupOne.isOk()) {
             return roleInGroupOne;
         }
@@ -332,7 +330,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         UpdateWrapper<ImGroupMemberEntity> wrapper = new UpdateWrapper<>();
         wrapper.eq("app_id",req.getAppId());
         wrapper.eq("group_id",req.getGroupId());
-        wrapper.eq("member_id",req.getOperater());
+        wrapper.eq("member_id",req.getOperator());
         imGroupMemberMapper.update(update, wrapper);
 
         return ResponseVO.successResponse();
@@ -354,7 +352,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         }
 
         //是否是自己修改自己的资料
-        boolean isMeOperate = req.getOperater().equals(req.getMemberId());
+        boolean isMeOperate = req.getOperator().equals(req.getMemberId());
 
         if (!isadmin) {
             //昵称只能自己修改 权限只能群主或管理员修改
@@ -432,7 +430,7 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         if (!isadmin) {
 
             //获取操作人的权限 是管理员or群主or群成员
-            ResponseVO<GetRoleInGroupResp> role = getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
+            ResponseVO<GetRoleInGroupResp> role = getRoleInGroupOne(req.getGroupId(), req.getOperator(), req.getAppId());
             if (!role.isOk()) {
                 return role;
             }

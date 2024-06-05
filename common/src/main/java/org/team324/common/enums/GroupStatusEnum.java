@@ -1,12 +1,18 @@
 package org.team324.common.enums;
 
+/**
+ * 群组状态枚举类
+ */
 public enum GroupStatusEnum {
 
     /**
-     * 1正常 2解散 其他待定比如封禁...
+     * 1正常
      */
     NORMAL(1),
 
+    /**
+     * 2 解散
+     */
     DESTROY(2),
 
     ;

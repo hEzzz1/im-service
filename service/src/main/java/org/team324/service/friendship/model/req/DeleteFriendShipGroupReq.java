@@ -8,6 +8,7 @@ import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
 /**
+ * 删除好友分组请求
  * @author crystalZ
  * @date 2024/6/1
  */
@@ -15,9 +16,9 @@ import java.util.List;
 public class DeleteFriendShipGroupReq extends RequestBase {
 
     @NotBlank(message = "fromId不能为空")
-    private String fromId;
+    private String fromId;  // 操作人id
 
     @NotEmpty(message = "分组名称不能为空")
-    private List<String> groupName;
+    private List<String> groupName; // 分组名称
 
 }

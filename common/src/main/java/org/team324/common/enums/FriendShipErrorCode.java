@@ -2,6 +2,10 @@ package org.team324.common.enums;
 
 import org.team324.common.exception.ApplicationExceptionEnum;
 
+/**
+ * 好友关系错误代码类
+ * 实现应用异常枚举类
+ */
 public enum FriendShipErrorCode implements ApplicationExceptionEnum {
 
 

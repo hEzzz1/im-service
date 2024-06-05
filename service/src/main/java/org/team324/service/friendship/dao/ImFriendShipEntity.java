@@ -6,6 +6,7 @@ import com.github.jeffreyning.mybatisplus.anno.AutoMap;
 import lombok.Data;
 
 /**
+ * im_friendship 映射表
  * @author crystalZ
  * @date 2024/5/31
  */

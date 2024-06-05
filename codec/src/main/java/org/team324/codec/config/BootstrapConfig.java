@@ -22,10 +22,27 @@ public class BootstrapConfig {
         private Integer workThreadSize;
         private Integer bossThreadSize;
         private Long heartBeatTime; // 心跳超时时间 ms
+        private Integer LoginModel;
         /**
          * redis配置
          */
         private RedisConfig redis;
+
+        /**
+         * mq配置
+         */
+        private Rabbitmq rabbitmq;
+
+        /**
+         * zk配置
+         */
+        private ZkConfig zkConfig;
+
+        /**
+         * brokerId
+         */
+        private Integer brokerId;
+
     }
 
     @Data
@@ -67,7 +84,6 @@ public class BootstrapConfig {
          * redis单机配置
          */
         private RedisSingle single;
-
     }
 
     /**
@@ -84,4 +100,39 @@ public class BootstrapConfig {
         private String address;
     }
 
+    /**
+     * mq哨兵模式配置
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Rabbitmq {
+
+        private String host;
+
+        private Integer port;
+
+        private String virtualHost;
+
+        private String userName;
+
+        private String password;
+    }
+
+    /**
+     * zookeeper
+     */
+    @Data
+    public static class ZkConfig {
+        /**
+         * zk连接地址
+         */
+        private String zkAddr;
+
+        /**
+         * zk连接超时时间
+         */
+        private Integer zkConnectTimeOut;
+    }
 }

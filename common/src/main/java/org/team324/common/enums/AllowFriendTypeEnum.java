@@ -1,5 +1,8 @@
 package org.team324.common.enums;
 
+/**
+ * 允许好友添加类型枚举类
+ */
 public enum AllowFriendTypeEnum {
 
     /**

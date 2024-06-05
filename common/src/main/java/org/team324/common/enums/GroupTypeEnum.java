@@ -1,12 +1,19 @@
 package org.team324.common.enums;
 
+
+/**
+ * 群类型枚举类
+ */
 public enum GroupTypeEnum {
 
     /**
-     * 群类型 1私有群（类似微信） 2公开群(类似qq）
+     * 1私有群（类似微信）
      */
     PRIVATE(1),
 
+    /**
+     *  2公开群(类似qq）
+     */
     PUBLIC(2),
 
     ;

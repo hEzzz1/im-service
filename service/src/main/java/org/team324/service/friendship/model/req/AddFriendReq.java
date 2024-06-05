@@ -8,6 +8,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
+ * 添加好友请求
  * @author crystalZ
  * @date 2024/5/31
  */
@@ -15,9 +16,9 @@ import javax.validation.constraints.NotNull;
 public class AddFriendReq extends RequestBase {
 
     @NotBlank(message = "fromId不能为空")
-    private String fromId;
+    private String fromId;  // 添加人id
 
     @NotNull(message = "toItem不能为空")
-    private FriendDto toItem;
+    private FriendDto toItem;   // 被添加人id
 
 }

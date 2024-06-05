@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+/**
+ * im_friendship_group 映射表
+ */
 @Data
 @TableName("im_friendship_group")
 public class ImFriendShipGroupEntity {

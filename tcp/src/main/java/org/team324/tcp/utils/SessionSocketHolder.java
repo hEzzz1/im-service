@@ -12,8 +12,7 @@ import org.team324.common.model.UserClientDto;
 import org.team324.common.model.UserSession;
 import org.team324.tcp.redis.RedisManager;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author crystalZ
@@ -23,28 +22,46 @@ public class SessionSocketHolder {
 
     private static final Map<UserClientDto, NioSocketChannel> CHANNELS = new HashMap<>();
 
-    public static void put(Integer appId, String userId, Integer clientType, NioSocketChannel channel) {
+    public static void put(Integer appId, String userId, Integer clientType, String imei, NioSocketChannel channel) {
 
         UserClientDto dto = new UserClientDto();
         dto.setAppId(appId);
         dto.setUserId(userId);
         dto.setClientType(clientType);
+        dto.setImei(imei);
         CHANNELS.put(dto,channel);
     }
 
-    public static NioSocketChannel get(Integer appId, String userId, Integer clientType) {
+    public static NioSocketChannel get(Integer appId, String userId, Integer clientType, String imei) {
         UserClientDto dto = new UserClientDto();
         dto.setAppId(appId);
         dto.setUserId(userId);
         dto.setClientType(clientType);
+        dto.setImei(imei);
         return CHANNELS.get(dto);
     }
 
-    public static void remove(Integer appId, String userId, Integer clientType) {
+    public static List<NioSocketChannel> get(Integer appId, String id) {
+
+        Set<UserClientDto> channelInfos = CHANNELS.keySet();
+        List<NioSocketChannel> channels = new ArrayList<>();
+
+        channelInfos.forEach(channel -> {
+            if (channel.getAppId().equals(appId) && id.equals(channel.getUserId())) {
+                channels.add(CHANNELS.get(channel));
+            }
+        });
+
+        return channels;
+
+    }
+
+    public static void remove(Integer appId, String userId, Integer clientType, String imei) {
         UserClientDto dto = new UserClientDto();
         dto.setAppId(appId);
         dto.setUserId(userId);
         dto.setClientType(clientType);
+        dto.setImei(imei);
         CHANNELS.remove(dto);
     }
 
@@ -61,10 +78,11 @@ public class SessionSocketHolder {
         String userId = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get();
         Integer appId = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.AppId)).get();
         Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
-        SessionSocketHolder.remove(appId, userId, clientType);
+        String imei = (String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
+        SessionSocketHolder.remove(appId, userId, clientType,imei);
         RedissonClient redissonClient = RedisManager.getRedissonClient();
         RMap<Object, Object> map = redissonClient.getMap(appId + Constants.RedisConstants.UserSessionConstant + userId);
-        map.remove(clientType);
+        map.remove(clientType+":"+imei);
         nioSocketChannel.close();
     }
 
@@ -76,7 +94,8 @@ public class SessionSocketHolder {
         String userId = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get();
         Integer appId = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.AppId)).get();
         Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
-        SessionSocketHolder.remove(appId, userId, clientType);
+        String imei = (String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
+        SessionSocketHolder.remove(appId, userId, clientType, imei);
         RedissonClient redissonClient = RedisManager.getRedissonClient();
         RMap<Object, Object> map = redissonClient.getMap(appId + Constants.RedisConstants.UserSessionConstant + userId);
         String sessionStr = (String) map.get(clientType.toString());
@@ -84,7 +103,7 @@ public class SessionSocketHolder {
         if (!StringUtils.isNotBlank(sessionStr)) {
             UserSession userSession = JSONObject.parseObject(sessionStr, UserSession.class);
             userSession.setConnectStatus(ImConnectStatusEnum.OFFLINE_STATUS.getCode());
-            map.put(clientType.toString(),JSONObject.toJSONString(userSession));
+            map.put(clientType.toString() + ":" + imei,JSONObject.toJSONString(userSession));
         }
         nioSocketChannel.close();
     }
