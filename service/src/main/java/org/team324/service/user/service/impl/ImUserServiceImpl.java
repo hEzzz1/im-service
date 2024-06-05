@@ -1,5 +1,6 @@
 package org.team324.service.user.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,18 +9,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.team324.common.ResponseVO;
+import org.team324.common.config.AppConfig;
+import org.team324.common.constant.Constants;
 import org.team324.common.enums.DelFlagEnum;
 import org.team324.common.enums.UserErrorCode;
 import org.team324.common.exception.ApplicationException;
 import org.team324.service.user.dao.ImUserDataEntity;
 import org.team324.service.user.dao.mapper.ImUserDataMapper;
-import org.team324.service.user.model.req.DeleteUserReq;
-import org.team324.service.user.model.req.GetUserInfoReq;
-import org.team324.service.user.model.req.ImportUserReq;
-import org.team324.service.user.model.req.ModifyUserInfoReq;
+import org.team324.service.user.model.req.*;
 import org.team324.service.user.model.resp.GetUserInfoResp;
 import org.team324.service.user.model.resp.ImportUserResp;
 import org.team324.service.user.service.ImUserService;
+import org.team324.service.utils.CallbackService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +37,11 @@ public class ImUserServiceImpl implements ImUserService {
     @Autowired
     ImUserDataMapper imUserDataMapper;
 
+    @Autowired
+    AppConfig appConfig;
+
+    @Autowired
+    CallbackService callbackService;
 
 
     @Override
@@ -167,8 +173,21 @@ public class ImUserServiceImpl implements ImUserService {
         update.setUserId(null);
         int update1 = imUserDataMapper.update(update, query);
         if (update1 == 1) {
+
+            // 回调
+            if (appConfig.isModifyUserAfterCallback()) {
+                callbackService.callback(req.getAppId(),
+                        Constants.CallbackCommand.ModifyUserAfter,
+                        JSONObject.toJSONString(req));
+            }
+
             return ResponseVO.successResponse();
         }
         throw new ApplicationException(UserErrorCode.MODIFY_USER_ERROR);
+    }
+
+    @Override
+    public ResponseVO login(LoginReq req) {
+        return ResponseVO.successResponse();
     }
 }

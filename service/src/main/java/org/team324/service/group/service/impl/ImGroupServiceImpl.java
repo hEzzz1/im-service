@@ -1,6 +1,7 @@
 package org.team324.service.group.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.apache.commons.lang3.StringUtils;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.team324.common.ResponseVO;
+import org.team324.common.config.AppConfig;
+import org.team324.common.constant.Constants;
 import org.team324.common.enums.GroupErrorCode;
 import org.team324.common.enums.GroupMemberRoleEnum;
 import org.team324.common.enums.GroupStatusEnum;
@@ -16,11 +19,13 @@ import org.team324.common.enums.GroupTypeEnum;
 import org.team324.common.exception.ApplicationException;
 import org.team324.service.group.dao.ImGroupEntity;
 import org.team324.service.group.dao.mapper.ImGroupMapper;
+import org.team324.service.group.model.callback.DestroyGroupCallbackDto;
 import org.team324.service.group.model.req.*;
 import org.team324.service.group.model.resp.GetGroupResp;
 import org.team324.service.group.model.resp.GetRoleInGroupResp;
 import org.team324.service.group.service.ImGroupMemberService;
 import org.team324.service.group.service.ImGroupService;
+import org.team324.service.utils.CallbackService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,6 +44,12 @@ public class ImGroupServiceImpl implements ImGroupService {
 
     @Autowired
     ImGroupMemberService imGroupMemberService;
+
+    @Autowired
+    AppConfig appConfig;
+
+    @Autowired
+    CallbackService callbackService;
 
     @Override
     public ResponseVO importGroup(ImportGroupReq req) {
@@ -120,6 +131,12 @@ public class ImGroupServiceImpl implements ImGroupService {
             imGroupMemberService.addGroupMember(req.getGroupId(), req.getAppId(), dto);
         }
 
+        // 回调
+        if (appConfig.isCreateGroupAfterCallback()) {
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.CreateGroupAfter,
+                    JSONObject.toJSONString(imGroupEntity));
+        }
+
         return ResponseVO.successResponse();
     }
 
@@ -176,6 +193,14 @@ public class ImGroupServiceImpl implements ImGroupService {
         if (update != 1) {
             throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_BASE_INFO_ERROR);
         }
+
+        // 回调
+        if(appConfig.isModifyGroupAfterCallback()) {
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.UpdateGroupAfter,
+                    JSONObject.toJSONString(imGroupMapper.selectOne(query)));
+        }
+
+
 
         return ResponseVO.successResponse();
     }
@@ -253,6 +278,14 @@ public class ImGroupServiceImpl implements ImGroupService {
         int update1 = imGroupMapper.update(update, objectQueryWrapper);
         if (update1 != 1) {
             throw new ApplicationException(GroupErrorCode.UPDATE_GROUP_BASE_INFO_ERROR);
+        }
+
+        // 回调函数
+        if(appConfig.isModifyGroupAfterCallback()) {
+            DestroyGroupCallbackDto dto = new DestroyGroupCallbackDto();
+            dto.setGroupId(req.getGroupId());
+            callbackService.callback(req.getAppId(), Constants.CallbackCommand.DestoryGroupAfter,
+                    JSONObject.toJSONString(dto));
         }
 
         return ResponseVO.successResponse();
