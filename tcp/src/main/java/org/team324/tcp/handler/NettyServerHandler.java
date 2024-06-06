@@ -18,6 +18,7 @@ import org.team324.common.enums.ImConnectStatusEnum;
 import org.team324.common.enums.command.SystemCommand;
 import org.team324.common.model.UserClientDto;
 import org.team324.common.model.UserSession;
+import org.team324.tcp.publish.MqMessageProducer;
 import org.team324.tcp.redis.RedisManager;
 import org.team324.tcp.utils.SessionSocketHolder;
 
@@ -67,7 +68,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             try {
                 InetAddress localHost = InetAddress.getLocalHost();
                 userSession.setBrokerHost(localHost.getHostAddress());
-            }catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             // TODO 存到redis
@@ -76,7 +77,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             map.put(msg.getMessageHeader().getClientType() + ":" + msg.getMessageHeader().getImei(),
                     JSONObject.toJSONString(userSession));
 
-            SessionSocketHolder.put(msg.getMessageHeader().getAppId(), loginPack.getUserId(), msg.getMessageHeader().getClientType(), msg.getMessageHeader().getImei(),(NioSocketChannel) ctx.channel());
+            SessionSocketHolder.put(msg.getMessageHeader().getAppId(), loginPack.getUserId(), msg.getMessageHeader().getClientType(), msg.getMessageHeader().getImei(), (NioSocketChannel) ctx.channel());
 
             // redis发布订阅
             UserClientDto dto = new UserClientDto();
@@ -92,6 +93,8 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             SessionSocketHolder.removeUserSession((NioSocketChannel) ctx.channel());
         } else if (command == SystemCommand.PING.getCommand()) {
             ctx.channel().attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
+        } else {
+            MqMessageProducer.sendMessage(msg, command);
         }
 
     }

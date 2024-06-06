@@ -69,11 +69,7 @@ public class MessageProducer {
     // 发送给所有端的方法
 
     public void sendToUser(String toId, Command command, Object data, Integer appId) {
-        // TODO session为空
         List<UserSession> sessions = userSessionUtils.getUserSessions(appId, toId);
-        // 日志输出
-        logger.info("toId :" + toId);
-        logger.info("session:" + sessions);
         for (UserSession session : sessions) {
             sendPack(toId, command, data, session);
         }
@@ -97,6 +93,7 @@ public class MessageProducer {
     // 发送给某个用户的指定客户端
 
     public void sendToUser(String toId, Command command, Object data, ClientInfo clientInfo) {
+
         UserSession session = userSessionUtils.getUserSessions(clientInfo.getAppId(), toId, clientInfo.getClientType(), clientInfo.getImei());
 
         sendPack(toId, command, data, session);

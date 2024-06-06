@@ -25,6 +25,22 @@ spring:
     username: crystal
     password: 7355608
 #    virtual-host:
+    listener:
+      simple:
+        concurrency: 5
+        max-concurrency: 10
+        acknowledge-mode: MANUAL
+        prefetch: 1
+#    publisher-confirms: true
+    publisher-returns: true
+    template:
+      mandatory: true
+    cache:
+      connection:
+        mode: channel
+      channel:
+        size: 36
+        checkout-timeout: 0
 
 appConfig:
   zkAddr: 192.168.192.129:2181
@@ -50,14 +66,16 @@ appConfig:
   sendGroupMessageAfterCallback: true # 发送群聊消息之后
   sendGroupMessageBeforeCallback: true # 发送群聊消息之前
   privateKey: 123456
+  sendMessageCheckFriend: false # 发送消息是否校验关系链
+  sendMessageCheckBlack: false # 发送消息是否校验黑名单
 
 #logging:
 #  config: classpath:logback-spring.xml
 server:
   port: 8080
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 httpclient:
   maxTotal: 100
