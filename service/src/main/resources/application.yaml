@@ -7,6 +7,24 @@ spring:
     url: jdbc:mysql://192.168.192.129:3306/im_data?serverTimezone=UTC&useSSL=false&characterEncoding=UTF8
     username: root
 
+  redis:
+    host: 192.168.192.129
+    port: 6379
+    jedis:
+      pool:
+        max-active: 100
+        max-idle: 100
+        max-wait: 1000
+        min-idle: 10
+
+  rabbitmq:
+    host: 192.168.192.129
+    port: 5672
+    addresses: 192.168.192.129
+    username: crystal
+    password: 7355608
+#    virtual-host:
+
 appConfig:
   zkAddr: 192.168.192.129:2181
   zkConnectTimeOut: 5000
@@ -28,8 +46,8 @@ appConfig:
   addGroupMemberBeforeCallback: true # 拉人入群之前回调
   sendMessageAfterCallback: true # 发送单聊消息之后
   sendMessageBeforeCallback: true # 发送单聊消息之前
-  sendGroupMessageAfterCallback: false # 发送群聊消息之后
-  sendGroupMessageBeforeCallback: false # 发送群聊消息之前
+  sendGroupMessageAfterCallback: true # 发送群聊消息之后
+  sendGroupMessageBeforeCallback: true # 发送群聊消息之前
 
 #logging:
 #  config: classpath:logback-spring.xml

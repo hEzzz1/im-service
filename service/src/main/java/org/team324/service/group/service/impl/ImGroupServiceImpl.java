@@ -9,6 +9,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.team324.codec.pack.group.CreateGroupPack;
+import org.team324.codec.pack.group.DestroyGroupPack;
+import org.team324.codec.pack.group.UpdateGroupInfoPack;
 import org.team324.common.ResponseVO;
 import org.team324.common.config.AppConfig;
 import org.team324.common.constant.Constants;
@@ -16,7 +19,9 @@ import org.team324.common.enums.GroupErrorCode;
 import org.team324.common.enums.GroupMemberRoleEnum;
 import org.team324.common.enums.GroupStatusEnum;
 import org.team324.common.enums.GroupTypeEnum;
+import org.team324.common.enums.command.GroupEventCommand;
 import org.team324.common.exception.ApplicationException;
+import org.team324.common.model.ClientInfo;
 import org.team324.service.group.dao.ImGroupEntity;
 import org.team324.service.group.dao.mapper.ImGroupMapper;
 import org.team324.service.group.model.callback.DestroyGroupCallbackDto;
@@ -26,6 +31,7 @@ import org.team324.service.group.model.resp.GetRoleInGroupResp;
 import org.team324.service.group.service.ImGroupMemberService;
 import org.team324.service.group.service.ImGroupService;
 import org.team324.service.utils.CallbackService;
+import org.team324.service.utils.GroupMessageProducer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,6 +56,9 @@ public class ImGroupServiceImpl implements ImGroupService {
 
     @Autowired
     CallbackService callbackService;
+
+    @Autowired
+    GroupMessageProducer groupMessageProducer;
 
     @Override
     public ResponseVO importGroup(ImportGroupReq req) {
@@ -93,7 +102,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         boolean isAdmin = false;
 
         if (!isAdmin) {
-            req.setOwnerId(req.getOperator());
+            req.setOwnerId(req.getOperater());
         }
 
         //1.判断群id是否存在
@@ -137,6 +146,13 @@ public class ImGroupServiceImpl implements ImGroupService {
                     JSONObject.toJSONString(imGroupEntity));
         }
 
+        // TCP 通知
+        CreateGroupPack createGroupPack = new CreateGroupPack();
+        BeanUtils.copyProperties(imGroupEntity, createGroupPack);
+        groupMessageProducer.producer(req.getOperater(), GroupEventCommand.CREATED_GROUP, createGroupPack
+                , new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
+
+
         return ResponseVO.successResponse();
     }
 
@@ -165,7 +181,7 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         if (!isAdmin) {
             // 校验权限
-            ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperator(), req.getAppId());
+            ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
             if (!roleInGroupOne.isOk()) {
                 return roleInGroupOne;
             }
@@ -199,6 +215,13 @@ public class ImGroupServiceImpl implements ImGroupService {
             callbackService.callback(req.getAppId(), Constants.CallbackCommand.UpdateGroupAfter,
                     JSONObject.toJSONString(imGroupMapper.selectOne(query)));
         }
+
+        // TCP通知
+        UpdateGroupInfoPack pack = new UpdateGroupInfoPack();
+        BeanUtils.copyProperties(req, pack);
+        groupMessageProducer.producer(req.getOperater(), GroupEventCommand.UPDATED_GROUP,
+                pack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
+
 
 
 
@@ -269,7 +292,7 @@ public class ImGroupServiceImpl implements ImGroupService {
             }
 
             if (imGroupEntity.getGroupType() == GroupTypeEnum.PUBLIC.getCode() &&
-                    !imGroupEntity.getOwnerId().equals(req.getOperator())) {
+                    !imGroupEntity.getOwnerId().equals(req.getOperater())) {
                 throw new ApplicationException(GroupErrorCode.THIS_OPERATE_NEED_OWNER_ROLE);
             }
         }
@@ -288,6 +311,13 @@ public class ImGroupServiceImpl implements ImGroupService {
                     JSONObject.toJSONString(dto));
         }
 
+        //TCP 通知
+        DestroyGroupPack pack = new DestroyGroupPack();
+        pack.setGroupId(req.getGroupId());
+        groupMessageProducer.producer(req.getOperater(),
+                GroupEventCommand.DESTROY_GROUP, pack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
+
+
         return ResponseVO.successResponse();
     }
 
@@ -295,7 +325,7 @@ public class ImGroupServiceImpl implements ImGroupService {
     @Transactional
     public ResponseVO transferGroup(TransferGroupReq req) {
 
-        ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperator(), req.getAppId());
+        ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
         if (!roleInGroupOne.isOk()) {
             return roleInGroupOne;
         }
@@ -336,7 +366,7 @@ public class ImGroupServiceImpl implements ImGroupService {
 
         if (!isadmin) {
             //不是后台调用需要检查权限
-            ResponseVO<GetRoleInGroupResp> role = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperator(), req.getAppId());
+            ResponseVO<GetRoleInGroupResp> role = imGroupMemberService.getRoleInGroupOne(req.getGroupId(), req.getOperater(), req.getAppId());
 
             if (!role.isOk()) {
                 return role;

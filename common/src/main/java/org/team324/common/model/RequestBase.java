@@ -12,5 +12,9 @@ public class RequestBase {
 
     private Integer appId;  // appId
 
-    private String operator;    // 当前操作人
+    private String operater;    // 当前操作人
+
+    private Integer clientType; // 客户端类型
+
+    private String imei;    // imei号
 }

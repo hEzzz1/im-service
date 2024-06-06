@@ -5,7 +5,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.team324.codec.pack.friendship.AddFriendGroupMemberPack;
+import org.team324.codec.pack.friendship.DeleteFriendGroupMemberPack;
 import org.team324.common.ResponseVO;
+import org.team324.common.enums.command.FriendshipEventCommand;
+import org.team324.common.model.ClientInfo;
 import org.team324.service.friendship.dao.ImFriendShipGroupEntity;
 import org.team324.service.friendship.dao.ImFriendShipGroupMemberEntity;
 import org.team324.service.friendship.dao.mapper.ImFriendShipGroupMemberMapper;
@@ -15,6 +19,7 @@ import org.team324.service.friendship.service.ImFriendShipGroupMemberService;
 import org.team324.service.friendship.service.ImFriendShipGroupService;
 import org.team324.service.user.dao.ImUserDataEntity;
 import org.team324.service.user.service.ImUserService;
+import org.team324.service.utils.MessageProducer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +44,9 @@ public class ImFriendShipGroupMemberServiceImpl
     @Autowired
     ImFriendShipGroupMemberService thisService;
 
+    @Autowired
+    MessageProducer messageProducer;
+
     @Override
     @Transactional
     public ResponseVO addGroupMember(AddFriendShipGroupMemberReq req) {
@@ -59,6 +67,15 @@ public class ImFriendShipGroupMemberServiceImpl
                 }
             }
         }
+
+        // TCP 通知
+        AddFriendGroupMemberPack pack = new AddFriendGroupMemberPack();
+        pack.setFromId(req.getFromId());
+        pack.setGroupName(req.getGroupName());
+        pack.setToIds(successId);
+        messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_MEMBER_ADD,
+                pack,new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
+
 
         return ResponseVO.successResponse(successId);
     }
@@ -81,6 +98,12 @@ public class ImFriendShipGroupMemberServiceImpl
                 }
             }
         }
+        DeleteFriendGroupMemberPack pack = new DeleteFriendGroupMemberPack();
+        pack.setFromId(req.getFromId());
+        pack.setGroupName(req.getGroupName());
+        pack.setToIds(successId);
+        messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_MEMBER_DELETE,
+                pack,new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
 
         return ResponseVO.successResponse(successId);
     }

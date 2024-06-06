@@ -548,4 +548,14 @@ public class ImGroupMemberServiceImpl implements ImGroupMemberService {
         int i = imGroupMemberMapper.updateById(imGroupMemberEntity);
         return ResponseVO.successResponse();
     }
+
+    @Override
+    public List<String> getGroupMemberId(String groupId, Integer appId) {
+        return imGroupMemberMapper.getGroupMemberId(appId, groupId);
+    }
+
+    @Override
+    public List<GroupMemberDto> getGroupManager(String groupId, Integer appId) {
+        return imGroupMemberMapper.getGroupManager(groupId, appId);
+    }
 }

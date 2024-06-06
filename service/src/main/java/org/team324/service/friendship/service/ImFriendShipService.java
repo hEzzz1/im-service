@@ -1,6 +1,7 @@
 package org.team324.service.friendship.service;
 
 import org.team324.common.ResponseVO;
+import org.team324.common.model.RequestBase;
 import org.team324.service.friendship.model.req.*;
 
 public interface ImFriendShipService {
@@ -9,7 +10,7 @@ public interface ImFriendShipService {
 
     public ResponseVO addFriend(AddFriendReq req);
 
-    public ResponseVO doAddFriend(String fromId, FriendDto dto, Integer appId);
+    public ResponseVO doAddFriend(RequestBase requestBase, String fromId, FriendDto dto, Integer appId);
 
     public ResponseVO updateFriend(UpdateFriendReq req);
 
