@@ -44,6 +44,11 @@ public class Constants {
     public static class RedisConstants {
 
         /**
+         * userSign，格式：appId:userSign:
+         */
+        public static final String userSign = "userSign";
+
+        /**
          * 用户session： appId : UserSessionConstant : userId
          * 例如 10000：UserSessionConstant：crystal
          */

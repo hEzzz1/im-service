@@ -49,6 +49,7 @@ appConfig:
   sendMessageBeforeCallback: true # 发送单聊消息之前
   sendGroupMessageAfterCallback: true # 发送群聊消息之后
   sendGroupMessageBeforeCallback: true # 发送群聊消息之前
+  privateKey: 123456
 
 #logging:
 #  config: classpath:logback-spring.xml

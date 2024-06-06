@@ -13,6 +13,13 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "appconfig")
 public class AppConfig {
 
+    /**
+     * 密钥
+     *
+     * 后期用数据表取代
+     */
+    private String privateKey;
+
     /** zk连接地址*/
     private String zkAddr;
 
