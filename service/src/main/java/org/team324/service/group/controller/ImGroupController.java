@@ -23,21 +23,21 @@ public class ImGroupController {
     @RequestMapping("/importGroup")
     public ResponseVO importGroup(@RequestBody @Validated ImportGroupReq req, Integer appId, String identifier)  {
         req.setAppId(appId);
-        req.setOperator(identifier);
+        req.setOperater(identifier);
         return groupService.importGroup(req);
     }
 
     @RequestMapping("/createGroup")
     public ResponseVO createGroup(@RequestBody @Validated CreateGroupReq req, Integer appId, String identifier)  {
         req.setAppId(appId);
-        req.setOperator(identifier);
+        req.setOperater(identifier);
         return groupService.createGroup(req);
     }
 
     @RequestMapping("/update")
     public ResponseVO update(@RequestBody @Validated UpdateGroupReq req, Integer appId, String identifier)  {
         req.setAppId(appId);
-        req.setOperator(identifier);
+        req.setOperater(identifier);
         return groupService.updateGroupInfo(req);
     }
 
@@ -50,7 +50,7 @@ public class ImGroupController {
     @RequestMapping("/getJoinedGroup")
     public ResponseVO getJoinedGroup(@RequestBody @Validated GetJoinedGroupReq req, Integer appId, String identifier)  {
         req.setAppId(appId);
-        req.setOperator(identifier);
+        req.setOperater(identifier);
         return groupService.getJoinedGroup(req);
     }
 //

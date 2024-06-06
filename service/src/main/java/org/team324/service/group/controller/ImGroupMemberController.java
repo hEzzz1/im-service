@@ -23,7 +23,7 @@ public class ImGroupMemberController {
     @RequestMapping("/importGroupMember")
     public ResponseVO importGroupMember(@RequestBody @Validated ImportGroupMemberReq req, Integer appId, String identifier)  {
         req.setAppId(appId);
-        req.setOperator(identifier);
+        req.setOperater(identifier);
         return groupMemberService.importGroupMember(req);
     }
 
