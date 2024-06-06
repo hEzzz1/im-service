@@ -6,6 +6,8 @@ import io.netty.util.AttributeKey;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.ImConnectStatusEnum;
 import org.team324.common.model.UserClientDto;
@@ -21,6 +23,7 @@ import java.util.*;
 public class SessionSocketHolder {
 
     private static final Map<UserClientDto, NioSocketChannel> CHANNELS = new HashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(SessionSocketHolder.class);
 
     public static void put(Integer appId, String userId, Integer clientType, String imei, NioSocketChannel channel) {
 

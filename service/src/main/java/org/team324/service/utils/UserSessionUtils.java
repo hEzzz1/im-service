@@ -1,10 +1,11 @@
 package org.team324.service.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.ImConnectStatusEnum;
 import org.team324.common.model.UserSession;
@@ -21,6 +22,7 @@ import java.util.Map;
 @Component
 public class UserSessionUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(UserSessionUtils.class);
     @Autowired
     StringRedisTemplate stringRedisTemplate;
 
@@ -28,12 +30,20 @@ public class UserSessionUtils {
 
     public List<UserSession> getUserSessions(Integer appId, String userId) {
 
+        log.info("getUserSessions被调用了........");
+
         String userSessionKey = appId
                 + Constants.RedisConstants.UserSessionConstant
                 + userId;
+
+        log.info("userSessionKey:{}", userSessionKey);
+
         Map<Object, Object> entries
                 = stringRedisTemplate.opsForHash().entries(userSessionKey);
-        List<UserSession> list = new ArrayList<UserSession>();
+
+        log.info("entries:{}", entries);
+
+        List<UserSession> list = new ArrayList<>();
         Collection<Object> values = entries.values();
         for (Object o : values) {
             String str = (String) o;

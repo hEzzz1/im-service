@@ -8,6 +8,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.team324.codec.proto.MessagePack;
+import org.team324.common.constant.Constants;
 import org.team324.common.enums.command.Command;
 import org.team324.common.model.ClientInfo;
 import org.team324.common.model.ClientType;
@@ -31,11 +32,14 @@ public class MessageProducer {
     @Autowired
     UserSessionUtils userSessionUtils;
 
+    private String queueName = Constants.RabbitConstants.MessageService2Im;
+
     public boolean sendMessage(UserSession session, Object msg) {
 
         try {
-            logger.info("send message :" + msg);
-            rabbitTemplate.convertAndSend("", session.getBrokerId() + "", msg);
+            rabbitTemplate.convertAndSend(queueName
+                    , session.getBrokerId() + ""
+                    , msg);
             return true;
         } catch (Exception e) {
             logger.error("send error :" + e.getMessage());
@@ -65,7 +69,11 @@ public class MessageProducer {
     // 发送给所有端的方法
 
     public void sendToUser(String toId, Command command, Object data, Integer appId) {
+        // TODO session为空
         List<UserSession> sessions = userSessionUtils.getUserSessions(appId, toId);
+        // 日志输出
+        logger.info("toId :" + toId);
+        logger.info("session:" + sessions);
         for (UserSession session : sessions) {
             sendPack(toId, command, data, session);
         }
@@ -75,14 +83,14 @@ public class MessageProducer {
     public void sendToUser(String toId, Integer clientType
             , String imei, Command command, Object data, Integer appId) {
 
-        if (clientType != null && StringUtils.isNotBlank(imei)) {
 
+        if (clientType != null && StringUtils.isNotBlank(imei)) {
             ClientInfo clientInfo = new ClientInfo(appId, clientType, imei);
             sendToUser(toId, command, data, clientInfo);
 
         } else {
             // 后台管理员调用
-            sendToUser(toId,command,data,appId);
+            sendToUser(toId, command, data, appId);
         }
     }
 

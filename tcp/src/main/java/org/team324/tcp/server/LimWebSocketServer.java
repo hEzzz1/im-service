@@ -11,10 +11,14 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.team324.codec.WebSocketMessageDecoder;
+import org.team324.codec.WebSocketMessageEncoder;
 import org.team324.codec.config.BootstrapConfig;
+import org.team324.tcp.handler.NettyServerHandler;
 
 /**
  * @author crystalZ
@@ -44,6 +48,7 @@ public class LimWebSocketServer {
                     @Override
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
+//                        pipeline.addLast(new LoggingHandler());
                         // websocket 基于http协议，所以要有http编解码器
                         pipeline.addLast("http-codec", new HttpServerCodec());
                         // 对写大数据流的支持
@@ -57,6 +62,9 @@ public class LimWebSocketServer {
                          * 对于websocket来讲，都是以frames进行传输的，不同的数据类型对应的frames也不同
                          */
                         pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
+                        pipeline.addLast(new WebSocketMessageDecoder());
+                        pipeline.addLast(new WebSocketMessageEncoder());
+                        pipeline.addLast(new NettyServerHandler(config.getBrokerId(),config.getLogicUrl()));
                     }
                 });
     }

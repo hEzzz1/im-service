@@ -7,6 +7,7 @@ import org.team324.tcp.redis.RedisManager;
 import org.team324.tcp.register.RegistryZk;
 import org.team324.tcp.register.Zkit;
 import org.team324.tcp.server.LimServer;
+import org.team324.tcp.server.LimWebSocketServer;
 import org.team324.tcp.utils.MqFactory;
 import org.yaml.snakeyaml.Yaml;
 
@@ -21,6 +22,8 @@ import java.net.UnknownHostException;
  * @date 2024/6/2
  */
 public class Stater {
+
+
     public static void main(String[] args) throws FileNotFoundException {
         if (args.length > 0) {
             start(args[0]);
@@ -36,12 +39,11 @@ public class Stater {
             BootstrapConfig bootstrapConfig = yaml.loadAs(inputStream, BootstrapConfig.class);
 
             new LimServer(bootstrapConfig.getLim()).start();
-            new LimServer(bootstrapConfig.getLim()).start();
+            new LimWebSocketServer(bootstrapConfig.getLim()).start();
 
             RedisManager.init(bootstrapConfig);
             MqFactory.init(bootstrapConfig.getLim().getRabbitmq());
-            MessageReciver.init(bootstrapConfig.getLim().getBrokerId().toString());
-
+            MessageReciver.init(bootstrapConfig.getLim().getBrokerId()+"");
             registerZk(bootstrapConfig);
 
         } catch (Exception e) {

@@ -43,6 +43,9 @@ public class BootstrapConfig {
          */
         private Integer brokerId;
 
+        private String logicUrl;
+
+
     }
 
     @Data
