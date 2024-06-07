@@ -8,6 +8,10 @@ import org.team324.common.enums.*;
 import org.team324.service.friendship.dao.ImFriendShipEntity;
 import org.team324.service.friendship.model.req.GetRelationReq;
 import org.team324.service.friendship.service.ImFriendShipService;
+import org.team324.service.group.dao.ImGroupEntity;
+import org.team324.service.group.model.resp.GetRoleInGroupResp;
+import org.team324.service.group.service.ImGroupMemberService;
+import org.team324.service.group.service.ImGroupService;
 import org.team324.service.user.dao.ImUserDataEntity;
 import org.team324.service.user.service.ImUserService;
 
@@ -26,6 +30,12 @@ public class CheckSendMessageService {
 
     @Autowired
     AppConfig appConfig;
+
+    @Autowired
+    ImGroupService imGroupService;
+
+    @Autowired
+    ImGroupMemberService imGroupMemberService;
 
     public ResponseVO checkSenderForvidAndMute(String fromId, Integer appId) {
 
@@ -96,6 +106,48 @@ public class CheckSendMessageService {
 
         }
 
+
+        return ResponseVO.successResponse();
+    }
+
+    public ResponseVO checkGroupMessage(String fromId, String groupId, Integer appId) {
+
+        // 用户是否被禁言
+        ResponseVO responseVO = checkSenderForvidAndMute(fromId, appId);
+        // 被禁言
+        if (!responseVO.isOk()) {
+            return responseVO;
+        }
+
+        // 判断群逻辑
+        ResponseVO<ImGroupEntity> group = imGroupService.getGroup(groupId, appId);
+        if (!group.isOk()) {
+            return group;
+        }
+
+        // 判断群成员是否在群内
+        ResponseVO<GetRoleInGroupResp> roleInGroupOne = imGroupMemberService.getRoleInGroupOne(groupId, fromId, appId);
+        if (!roleInGroupOne.isOk()) {
+            return roleInGroupOne;
+        }
+        // 群成员
+        GetRoleInGroupResp data = roleInGroupOne.getData();
+
+        // 判断群是否被禁言
+        // 如果禁言 只有群管理和群主可以发言
+        ImGroupEntity groupData = group.getData();
+
+        if (groupData.getMute() == GroupMuteTypeEnum.MUTE.getCode()
+                && (data.getRole() != GroupMemberRoleEnum.MAMAGER.getCode()
+                || data.getRole() != GroupMemberRoleEnum.OWNER.getCode())) {
+            // 此时既不是管理员又不是群主
+            return ResponseVO.errorResponse(GroupErrorCode.THIS_GROUP_IS_MUTE);
+        }
+
+        if (data.getSpeakDate() != null
+                && data.getSpeakDate() > System.currentTimeMillis()) {
+            return ResponseVO.errorResponse(GroupErrorCode.GROUP_MEMBER_IS_SPEAK);
+        }
 
 
         return ResponseVO.successResponse();

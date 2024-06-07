@@ -13,6 +13,7 @@ import org.team324.common.route.algorithm.consistenthash.ConsistentHandle;
 import org.team324.common.route.algorithm.consistenthash.TreeMapConsistentHash;
 import org.team324.common.route.algorithm.loop.LoopHandle;
 import org.team324.common.route.algorithm.random.RandomHandle;
+import org.team324.service.utils.SnowflakeIdWorker;
 
 import java.lang.reflect.Method;
 
@@ -51,10 +52,23 @@ public class BeanConfig {
             hashWay = hashHandler.getClazz();
             AbstractConsistentHash consistentHash
                     = (AbstractConsistentHash) Class.forName(hashWay).newInstance();
-            setHash.invoke(routeHandle,consistentHash);
+            setHash.invoke(routeHandle, consistentHash);
         }
 
         return routeHandle;
     }
+
+    @Bean
+    public EasySqlInjector easySqlInjector() {
+        return new EasySqlInjector();
+    }
+
+    // 雪花算法
+    @Bean
+    public SnowflakeIdWorker buildSnowflakeIdWorker() throws Exception {
+        // 参数不一致
+        return new SnowflakeIdWorker(0);
+    }
+
 
 }

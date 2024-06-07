@@ -1,4 +1,4 @@
-package org.team324.service.message.mq;
+package org.team324.service.group.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -16,30 +16,30 @@ import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.team324.common.constant.Constants;
-import org.team324.common.enums.command.MessageCommand;
+import org.team324.common.enums.command.GroupEventCommand;
+import org.team324.common.model.message.GroupChatMessageContent;
 import org.team324.common.model.message.MessageContent;
-import org.team324.service.message.service.P2PMessageService;
+import org.team324.service.group.service.GroupMessageService;
 
 import java.util.Map;
 
 /**
  * @author crystalZ
- * @date 2024/6/6
+ * @date 2024/6/7
  */
-
 @Component
-public class ChatOperateReceiver {
+public class GroupChatOperateReceiver {
 
-    private static Logger logger = LoggerFactory.getLogger(ChatOperateReceiver.class);
+    private static Logger logger = LoggerFactory.getLogger(GroupChatOperateReceiver.class);
 
     @Autowired
-    P2PMessageService p2PMessageService;
+    GroupMessageService  groupMessageService;
 
     @RabbitListener(
             bindings = @QueueBinding(
-             value = @Queue(value = Constants.RabbitConstants.Im2MessageService,
-                     durable = "true"),
-             exchange = @Exchange(value = Constants.RabbitConstants.Im2MessageService, durable = "true")
+                    value = @Queue(value = Constants.RabbitConstants.Im2GroupService,
+                            durable = "true"),
+                    exchange = @Exchange(value = Constants.RabbitConstants.Im2GroupService, durable = "true")
             ),concurrency = "1"
     )
     public void onChatMessage(@Payload Message message,
@@ -54,12 +54,11 @@ public class ChatOperateReceiver {
 
             JSONObject jsonObject = JSON.parseObject(msg);
             Integer command = jsonObject.getInteger("command");
-            if (command.equals(MessageCommand.MSG_P2P.getCommand())) {
+            if (command.equals(GroupEventCommand.MSG_GROUP.getCommand())) {
                 // 处理消息
-                MessageContent messageContent
-                        = jsonObject.toJavaObject(MessageContent.class);
-
-                p2PMessageService.process(messageContent);
+                GroupChatMessageContent messageContent
+                        = jsonObject.toJavaObject(GroupChatMessageContent.class);
+                groupMessageService.process(messageContent);
             }
             channel.basicAck(deliveryTag, false);
         }catch (Exception e) {

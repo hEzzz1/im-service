@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.team324.common.ResponseVO;
 import org.team324.service.group.model.req.*;
+import org.team324.service.group.service.GroupMessageService;
 import org.team324.service.group.service.ImGroupService;
 
 /**
@@ -19,6 +20,9 @@ public class ImGroupController {
 
     @Autowired
     ImGroupService groupService;
+
+    @Autowired
+    GroupMessageService groupMessageService;
 
     @RequestMapping("/importGroup")
     public ResponseVO importGroup(@RequestBody @Validated ImportGroupReq req, Integer appId, String identifier)  {
@@ -53,6 +57,15 @@ public class ImGroupController {
         req.setOperater(identifier);
         return groupService.getJoinedGroup(req);
     }
+
+    @RequestMapping("/sendMessage")
+    public ResponseVO sendMessage(@RequestBody @Validated SendGroupMessageReq
+                                          req, Integer appId,
+                                  String identifier)  {
+        req.setAppId(appId);
+        req.setOperater(identifier);
+        return ResponseVO.successResponse(groupMessageService.send(req));
+    }
 //
 //
 //    @RequestMapping("/destroyGroup")
@@ -74,15 +87,6 @@ public class ImGroupController {
 //        req.setAppId(appId);
 //        req.setOperator(identifier);
 //        return groupService.muteGroup(req);
-//    }
-//
-//    @RequestMapping("/sendMessage")
-//    public ResponseVO sendMessage(@RequestBody @Validated SendGroupMessageReq
-//                                              req, Integer appId,
-//                                  String identifier)  {
-//        req.setAppId(appId);
-//        req.setOperator(identifier);
-//        return ResponseVO.successResponse(groupMessageService.send(req));
 //    }
 //
 //    @RequestMapping("/syncJoinedGroup")

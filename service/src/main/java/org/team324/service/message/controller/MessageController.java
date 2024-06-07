@@ -1,0 +1,28 @@
+package org.team324.service.message.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.team324.common.ResponseVO;
+import org.team324.service.message.model.req.SendMessageReq;
+import org.team324.service.message.service.P2PMessageService;
+
+/**
+ * @author crystalZ
+ * @date 2024/6/7
+ */
+@RestController
+@RequestMapping("/v1/message")
+public class MessageController {
+
+    @Autowired
+    P2PMessageService p2PMessageService;
+
+    @RequestMapping("/send")
+    public ResponseVO send(@RequestBody @Validated SendMessageReq req, Integer appId)  {
+        req.setAppId(appId);
+        return ResponseVO.successResponse(p2PMessageService.send(req));
+    }
+}

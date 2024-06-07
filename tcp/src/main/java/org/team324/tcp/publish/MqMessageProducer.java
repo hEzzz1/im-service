@@ -21,6 +21,10 @@ public class MqMessageProducer {
 
         String channelName = Constants.RabbitConstants.Im2MessageService;
 
+        if (command.toString().startsWith("2")) {
+            channelName = Constants.RabbitConstants.Im2GroupService;
+        }
+
         try {
             channel = MqFactory.getChannel(channelName);
 

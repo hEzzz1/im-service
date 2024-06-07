@@ -2,16 +2,17 @@ package org.team324.service.message.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.team324.codec.pack.Message.ChatMessageAck;
 import org.team324.common.ResponseVO;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.model.ClientInfo;
-import org.team324.service.message.model.MessageContent;
+import org.team324.common.model.message.MessageContent;
+import org.team324.service.message.model.req.SendMessageReq;
+import org.team324.service.message.model.resp.SendMessageResp;
 import org.team324.service.utils.MessageProducer;
-
-import javax.xml.ws.Action;
 
 /**
  * @author crystalZ
@@ -28,6 +29,9 @@ public class P2PMessageService {
     @Autowired
     MessageProducer messageProducer;
 
+    @Autowired
+    MessageStoreService messageStoreService;
+
     //
     public void process(MessageContent messageContent) {
 
@@ -41,11 +45,13 @@ public class P2PMessageService {
         Integer appId = messageContent.getAppId();
         ResponseVO responseVO = imServerPermissionCheck(fromId, toId, messageContent);
         if (responseVO.isOk()) {
+            //在回包之前持久化
+            messageStoreService.storeP2PMessage(messageContent);
 
             // 1. 回ACK给自己
             ack(messageContent, responseVO);
-            // 2. 发消息给同同步端
-            ackToSender(messageContent, messageContent);
+            // 2. 发消息给同步端
+            syncToSender(messageContent, messageContent);
             // 3. 发消息给对象在线端
             dispatchMessage(messageContent);
 
@@ -76,7 +82,8 @@ public class P2PMessageService {
     }
 
     // 发送给同步端
-    private void ackToSender(MessageContent messageContent, ClientInfo clientInfo) {
+    private void syncToSender(MessageContent messageContent, ClientInfo clientInfo) {
+
         messageProducer.sendToUserExceptClient(messageContent.getFromId()
                 , MessageCommand.MSG_P2P
                 , messageContent
@@ -104,4 +111,20 @@ public class P2PMessageService {
         return responseVO;
     }
 
+    public SendMessageResp send(SendMessageReq req) {
+
+        SendMessageResp resp = new SendMessageResp();
+        MessageContent message = new MessageContent();
+        BeanUtils.copyProperties(req,message);
+
+        //在回包之前持久化
+        messageStoreService.storeP2PMessage(message);
+        resp.setMessageKey(message.getMessageKey());
+        resp.setMessageTime(System.currentTimeMillis());
+        // 发消息给同步端
+        syncToSender(message, message);
+        // 发消息给对象在线端
+        dispatchMessage(message);
+        return resp;
+    }
 }

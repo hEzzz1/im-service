@@ -1,4 +1,4 @@
-package org.team324.service.message.model;
+package org.team324.common.model.message;
 
 import lombok.Data;
 import org.team324.common.model.ClientInfo;
@@ -17,5 +17,11 @@ public class MessageContent extends ClientInfo {
     private String toId;
 
     private String messageBody;
+
+    private Long messageTime;
+
+    private String extra;
+
+    private Long messageKey;
 
 }
