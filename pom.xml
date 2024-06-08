@@ -22,6 +22,7 @@
         <module>service</module>
         <module>tcp</module>
         <module>codec</module>
+        <module>message-store</module>
     </modules>
 
     <properties>

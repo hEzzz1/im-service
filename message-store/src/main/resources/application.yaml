@@ -1,0 +1,46 @@
+spring:
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: 123456
+    url: jdbc:mysql://192.168.192.129:3306/im_data?serverTimezone=UTC&useSSL=false&characterEncoding=UTF8
+    username: root
+  redis:
+    host: 192.168.192.129
+    port: 6379
+    database: 1   # 不设置 默认为0号
+    jedis:
+      pool:
+        max-active: 100
+        max-idle: 100
+        max-wait: 1000
+        min-idle: 10
+  rabbitmq:
+    host: 192.168.192.129
+    port: 5672
+    addresses: 192.168.192.129
+    username: crystal
+    password: 7355608
+#    virtual-host:
+    listener:
+      simple:
+        concurrency: 5
+        max-concurrency: 10
+        acknowledge-mode: MANUAL
+        prefetch: 1
+#    publisher-confirms: true
+    publisher-returns: true
+    template:
+      mandatory: true
+    cache:
+      connection:
+        mode: channel
+      channel:
+        size: 36
+        checkout-timeout: 0
+#logging:
+#  config: classpath:logback-spring.xml
+#mybatis-plus:
+#  configuration:
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
