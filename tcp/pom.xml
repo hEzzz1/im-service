@@ -75,6 +75,15 @@
             <artifactId>zkclient</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.netflix.feign</groupId>
+            <artifactId>feign-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.netflix.feign</groupId>
+            <artifactId>feign-jackson</artifactId>
+        </dependency>
+
 
     </dependencies>
     <dependencyManagement>

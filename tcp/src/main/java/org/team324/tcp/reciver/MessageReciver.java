@@ -46,7 +46,7 @@ public class MessageReciver {
                                 MessagePack messagePack = JSONObject.parseObject(msgStr, MessagePack.class);
                                 BaseProcess messageProcess = ProcessFactory.getMessageProcess(messagePack.getCommand());
                                 messageProcess.process(messagePack);
-                                log.info("消息服务发来的消息:" + msgStr);
+//                                log.info("消息服务发来的消息:" + msgStr);
                                 channel.basicAck(envelope.getDeliveryTag(), false);
                             } catch (Exception e) {
                                 log.error("接收消息时发生异常", e);

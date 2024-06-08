@@ -66,8 +66,8 @@ appConfig:
   sendGroupMessageAfterCallback: true # 发送群聊消息之后
   sendGroupMessageBeforeCallback: true # 发送群聊消息之前
   privateKey: 123456
-  sendMessageCheckFriend: false # 发送消息是否校验关系链
-  sendMessageCheckBlack: false # 发送消息是否校验黑名单
+  sendMessageCheckFriend: true # 发送消息是否校验关系链
+  sendMessageCheckBlack: true # 发送消息是否校验黑名单
 
 #logging:
 #  config: classpath:logback-spring.xml

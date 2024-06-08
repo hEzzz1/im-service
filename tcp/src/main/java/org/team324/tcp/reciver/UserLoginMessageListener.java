@@ -42,7 +42,6 @@ public class UserLoginMessageListener {
         topic.addListener(String.class, new MessageListener<String>() {
             @Override
             public void onMessage(CharSequence charSequence, String msg) {
-                logger.info("收到用户上线通知：" + msg);
                 UserClientDto dto = JSONObject.parseObject(msg, UserClientDto.class);
                 List<NioSocketChannel> nioSocketChannels = SessionSocketHolder.get(dto.getAppId(), dto.getUserId());
 

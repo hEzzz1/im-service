@@ -1,5 +1,7 @@
 package org.team324.service.message.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.team324.common.ResponseVO;
@@ -22,6 +24,7 @@ import org.team324.service.user.service.ImUserService;
 @Service
 public class CheckSendMessageService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CheckSendMessageService.class);
     @Autowired
     ImUserService imUserService;
 

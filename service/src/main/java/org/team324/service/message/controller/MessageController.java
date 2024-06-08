@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.team324.common.ResponseVO;
+import org.team324.common.model.message.CheckSendMessageReq;
 import org.team324.service.message.model.req.SendMessageReq;
 import org.team324.service.message.service.P2PMessageService;
 
@@ -21,8 +22,15 @@ public class MessageController {
     P2PMessageService p2PMessageService;
 
     @RequestMapping("/send")
-    public ResponseVO send(@RequestBody @Validated SendMessageReq req, Integer appId)  {
+    public ResponseVO send(@RequestBody @Validated SendMessageReq req, Integer appId) {
         req.setAppId(appId);
         return ResponseVO.successResponse(p2PMessageService.send(req));
+    }
+
+    @RequestMapping("/checkSend")
+    public ResponseVO checkSend(@RequestBody @Validated CheckSendMessageReq req) {
+        return p2PMessageService.imServerPermissionCheck(req.getFromId()
+                , req.getToId()
+                , req.getAppId());
     }
 }
