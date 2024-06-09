@@ -70,5 +70,7 @@ public class AppConfig {
 
     private Integer deleteConversationSyncMode; // 多端同步
 
+    private Integer offlineMessageCount;    // 离线消息存储条数
+
 
 }

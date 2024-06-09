@@ -12,6 +12,7 @@ import org.team324.common.enums.command.GroupEventCommand;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.model.ClientInfo;
 import org.team324.common.model.message.GroupChatMessageContent;
+import org.team324.common.model.message.OfflineMessageContent;
 import org.team324.service.group.model.req.SendGroupMessageReq;
 import org.team324.service.message.model.resp.SendMessageResp;
 import org.team324.service.message.service.CheckSendMessageService;
@@ -95,16 +96,25 @@ public class GroupMessageService {
                 + groupId);
         messageContent.setMessageSequence(seq);
         threadPoolExecutor.execute(() -> {
-                // 持久化
-                messageStoreService.storeGroupMessage(messageContent);
-                // 1. 回ACK给自己
-                ack(messageContent, ResponseVO.successResponse());
-                // 2. 发消息给同同步端
-                syncToSender(messageContent, messageContent);
-                // 3. 发消息所有群成员
-                dispatchMessage(messageContent);
+            // 持久化
+            messageStoreService.storeGroupMessage(messageContent);
 
-                messageStoreService.setMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId(), messageContent);
+                // 离线消息
+            List<String> groupMemberId = imGroupMemberService.getGroupMemberId(messageContent.getGroupId(),
+                    messageContent.getAppId());
+            messageContent.setMemberIds(groupMemberId);
+            OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
+            BeanUtils.copyProperties(messageContent,offlineMessageContent);
+            offlineMessageContent.setToId(messageContent.getGroupId());
+            messageStoreService.storeGroupOfflineMessage(offlineMessageContent,groupMemberId);
+
+            // 1. 回ACK给自己
+            ack(messageContent, ResponseVO.successResponse());
+            // 2. 发消息给同同步端
+            syncToSender(messageContent, messageContent);
+            // 3. 发消息所有群成员
+            dispatchMessage(messageContent);
+            messageStoreService.setMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId(), messageContent);
         });
 //        } else {
 //            // 告诉客户端失败了
@@ -143,12 +153,11 @@ public class GroupMessageService {
     // 分发
     private void dispatchMessage(GroupChatMessageContent messageContent) {
 
-        // 已经排除已经离开的群成员了
-        List<String> groupMemberId = imGroupMemberService.getGroupMemberId(messageContent.getGroupId()
-                , messageContent.getAppId());
+//        // 已经排除已经离开的群成员了
+//        List<String> groupMemberId = imGroupMemberService.getGroupMemberId(messageContent.getGroupId()
+//                , messageContent.getAppId());
 
-        for (String memberId : groupMemberId) {
-
+        for (String memberId : messageContent.getMemberIds()) {
             // 判断成员不能是发送方
             if (!memberId.equals(messageContent.getFromId())) {
                 messageProducer.sendToUser(memberId

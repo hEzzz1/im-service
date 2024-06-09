@@ -9,9 +9,11 @@ import org.team324.codec.pack.message.ChatMessageAck;
 import org.team324.codec.pack.message.MessageReciverServerAckPack;
 import org.team324.common.ResponseVO;
 import org.team324.common.constant.Constants;
+import org.team324.common.enums.ConversationTypeEnum;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.model.ClientInfo;
 import org.team324.common.model.message.MessageContent;
+import org.team324.common.model.message.OfflineMessageContent;
 import org.team324.service.message.model.req.SendMessageReq;
 import org.team324.service.message.model.resp.SendMessageResp;
 import org.team324.service.seq.RedisSeq;
@@ -61,6 +63,25 @@ public class P2PMessageService {
             }
         });
     }
+
+    // 离线消息
+    // 会话列表拉取会话消息
+    // 在线走tcp投递
+    // 离线不会投递
+    // 存储介质？
+    // mysql 消息量大效率不高
+    // redis v
+    // 怎么存？
+    // list 查询不友好
+    // set 无序 数据量小的情况下可以使用
+    // zset 支持分页  v
+    //  messagekey作为分支 message数据体
+    //  messagekey1 message
+    //  messagekey2 message
+
+
+    // 历史消息
+
 
     // 多线程 ---> 消息并行 ---->  可能会导致乱序问题
     // 有序性
@@ -117,6 +138,13 @@ public class P2PMessageService {
         threadPoolExecutor.execute(() -> {
             //在回包之前持久化
             messageStoreService.storeP2PMessage(messageContent);
+
+            // 插入离线消息
+            OfflineMessageContent offlineMessageContent = new OfflineMessageContent();
+            BeanUtils.copyProperties(messageContent,offlineMessageContent);
+            offlineMessageContent.setConversationType(ConversationTypeEnum.P2P.getCode());
+            messageStoreService.storeOfflineMessage(offlineMessageContent);
+
             // 1. 回ACK给自己
             ack(messageContent, ResponseVO.successResponse());
             // 2. 发消息给同步端
