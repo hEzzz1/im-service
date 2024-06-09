@@ -14,6 +14,7 @@ import org.team324.common.model.ClientInfo;
 import org.team324.common.model.ClientType;
 import org.team324.common.model.UserSession;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,11 +69,17 @@ public class MessageProducer {
 
     // 发送给所有端的方法
 
-    public void sendToUser(String toId, Command command, Object data, Integer appId) {
+    public List<ClientInfo> sendToUser(String toId, Command command, Object data, Integer appId) {
         List<UserSession> sessions = userSessionUtils.getUserSessions(appId, toId);
+
+        List<ClientInfo> list = new ArrayList<>();
         for (UserSession session : sessions) {
-            sendPack(toId, command, data, session);
+            boolean b = sendPack(toId, command, data, session);
+            if (b) {
+                list.add(new ClientInfo(session.getAppId(),session.getClientType(),session.getImei()));
+            }
         }
+        return list;
     }
 
     // 兼容

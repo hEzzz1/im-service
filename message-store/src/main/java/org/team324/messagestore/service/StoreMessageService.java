@@ -29,13 +29,13 @@ public class StoreMessageService {
     public void doStoreP2PMessage(DoStoreP2PMessageDto doStoreP2PMessageDto) {
 
         imMessageBodyMapper.insert(doStoreP2PMessageDto.getImMessageBodyEntity());
-        List<ImMessageHistoryEntity> imMessageHistoryEntities = extractMessageHistory(doStoreP2PMessageDto.getMessageContent(), doStoreP2PMessageDto.getImMessageBodyEntity());
+        List<ImMessageHistoryEntity> imMessageHistoryEntities = extractToP2PMessageHistory(doStoreP2PMessageDto.getMessageContent(), doStoreP2PMessageDto.getImMessageBodyEntity());
         imMessageHistoryMapper.insertBatchSomeColumn(imMessageHistoryEntities);
 
 
     }
 
-    public List<ImMessageHistoryEntity> extractMessageHistory(MessageContent messageContent, ImMessageBodyEntity messageBody) {
+    public List<ImMessageHistoryEntity> extractToP2PMessageHistory(MessageContent messageContent, ImMessageBodyEntity messageBody) {
 
         List<ImMessageHistoryEntity> list = new ArrayList<>();
 
@@ -44,13 +44,14 @@ public class StoreMessageService {
         fromHistory.setOwnerId(messageContent.getFromId());
         fromHistory.setMessageKey(messageBody.getMessageKey());
         fromHistory.setCreateTime(System.currentTimeMillis());
-
+        fromHistory.setSequence(messageContent.getMessageSequence());
 
         ImMessageHistoryEntity toHistory = new ImMessageHistoryEntity();
         BeanUtils.copyProperties(messageContent, toHistory);
         toHistory.setOwnerId(messageContent.getToId());
         toHistory.setMessageKey(messageBody.getMessageKey());
         toHistory.setCreateTime(System.currentTimeMillis());
+        toHistory.setSequence(messageContent.getMessageSequence());
 
         list.add(fromHistory);
         list.add(toHistory);

@@ -9,7 +9,7 @@ public enum MessageCommand implements Command {
     MSG_ACK(0x416),
 
     //消息收到ack 1107
-    MSG_RECIVE_ACK(1107),
+    MSG_RECIVE_ACK(0x453),
 
     //发送消息已读   1106
     MSG_READED(0x452),

@@ -5,15 +5,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.team324.codec.pack.Message.ChatMessageAck;
+import org.team324.codec.pack.message.ChatMessageAck;
+import org.team324.codec.pack.message.MessageReciverServerAckPack;
 import org.team324.common.ResponseVO;
+import org.team324.common.constant.Constants;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.model.ClientInfo;
 import org.team324.common.model.message.MessageContent;
 import org.team324.service.message.model.req.SendMessageReq;
 import org.team324.service.message.model.resp.SendMessageResp;
+import org.team324.service.seq.RedisSeq;
+import org.team324.service.utils.ConversationIdGenerate;
 import org.team324.service.utils.MessageProducer;
 
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -38,6 +43,9 @@ public class P2PMessageService {
     @Autowired
     MessageStoreService messageStoreService;
 
+    @Autowired
+    RedisSeq redisSeq;
+
     // 线程池
     private final ThreadPoolExecutor threadPoolExecutor;
 
@@ -54,7 +62,14 @@ public class P2PMessageService {
         });
     }
 
-    //
+    // 多线程 ---> 消息并行 ---->  可能会导致乱序问题
+    // 有序性
+    // 服务端生成绝对递增的序列号
+        // redis 1 2 3  绝对递增 依赖redis
+        // 雪花   趋势递增
+        // 发送时间 客户端时间可以自己进行修改
+    // 选择标杆 来进行排序
+
     public void process(MessageContent messageContent) {
 
         // 前置校验
@@ -69,17 +84,30 @@ public class P2PMessageService {
 //        ResponseVO responseVO = imServerPermissionCheck(fromId, toId, appId);
 //        if (responseVO.isOk()) {
         // 线程池最好是流式的 不需要分支 轻量化
-            // 将任务提交到线程池池
-            threadPoolExecutor.execute(() -> {
-                //在回包之前持久化
-                messageStoreService.storeP2PMessage(messageContent);
-                // 1. 回ACK给自己
-                ack(messageContent, ResponseVO.successResponse());
-                // 2. 发消息给同步端
-                syncToSender(messageContent, messageContent);
-                // 3. 发消息给对象在线端
-                dispatchMessage(messageContent);
-            });
+        // 将任务提交到线程池池
+        threadPoolExecutor.execute(() -> {
+
+            // key = appId : Seq : userId (fromId + toId) / groupId
+            long seq = redisSeq.doGetSeq(
+                    messageContent.getAppId() + ":"
+                            + Constants.SeqConstants.Message + ":"
+                            + ConversationIdGenerate.generateP2PId(messageContent.getFromId(),messageContent.getToId()));
+            // 分配seq序列号
+            messageContent.setMessageSequence(seq);
+            //在回包之前持久化
+            messageStoreService.storeP2PMessage(messageContent);
+            // 1. 回ACK给自己
+            ack(messageContent, ResponseVO.successResponse());
+            // 2. 发消息给同步端
+            syncToSender(messageContent, messageContent);
+            // 3. 发消息给对象在线端
+            // list为对方在线端列表
+            List<ClientInfo> list = dispatchMessage(messageContent);
+            if (list.isEmpty()) {
+                // 发送接受确认给发送方 需要带上服务端发送标识
+                revicerAck(messageContent);
+            }
+        });
 
 //        } else {
 //            // 告诉客户端失败了
@@ -92,40 +120,43 @@ public class P2PMessageService {
 
     private void ack(MessageContent messageContent, ResponseVO responseVO) {
 
-        logger.info("message ack, msgId = {}, checkResult = {}"
-                , messageContent.getMessageId()
-                , responseVO.getCode());
+        logger.info("message ack, msgId = {}, checkResult = {}", messageContent.getMessageId(), responseVO.getCode());
 
-        ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId());
+        ChatMessageAck chatMessageAck = new ChatMessageAck(messageContent.getMessageId(), messageContent.getMessageSequence());
         responseVO.setData(chatMessageAck);
 
         // 发消息
-        messageProducer.sendToUser(messageContent.getFromId()
-                , MessageCommand.MSG_ACK
-                , responseVO
-                , messageContent);
+        messageProducer.sendToUser(messageContent.getFromId(), MessageCommand.MSG_ACK, responseVO, messageContent);
+    }
+
+    public void revicerAck(MessageContent messageContent) {
+
+        MessageReciverServerAckPack pack = new MessageReciverServerAckPack();
+        pack.setFromId(messageContent.getToId());
+        pack.setToId(messageContent.getFromId());
+        pack.setMessageKey(messageContent.getMessageKey());
+        pack.setMessageSequence(messageContent.getMessageSequence());
+        pack.setServerSend(true);
+        messageProducer.sendToUser(messageContent.getFromId(), MessageCommand.MSG_RECIVE_ACK, pack
+                , new ClientInfo(messageContent.getAppId()
+                        , messageContent.getClientType()
+                        , messageContent.getImei()));
     }
 
     // 发送给同步端
     private void syncToSender(MessageContent messageContent, ClientInfo clientInfo) {
 
-        messageProducer.sendToUserExceptClient(messageContent.getFromId()
-                , MessageCommand.MSG_P2P
-                , messageContent
-                , messageContent);
+        messageProducer.sendToUserExceptClient(messageContent.getFromId(), MessageCommand.MSG_P2P, messageContent, messageContent);
 
     }
 
     // 分发
-    private void dispatchMessage(MessageContent messageContent) {
-        messageProducer.sendToUser(messageContent.getToId()
-                , MessageCommand.MSG_P2P
-                , messageContent
-                , messageContent.getAppId());
+    private List<ClientInfo> dispatchMessage(MessageContent messageContent) {
+        List<ClientInfo> list = messageProducer.sendToUser(messageContent.getToId(), MessageCommand.MSG_P2P, messageContent, messageContent.getAppId());
+        return list;
     }
 
-    public ResponseVO imServerPermissionCheck(String fromId, String toId,
-                                               Integer appId) {
+    public ResponseVO imServerPermissionCheck(String fromId, String toId, Integer appId) {
         ResponseVO responseVO = checkSendMessageService.checkSenderForvidAndMute(fromId, appId);
         if (!responseVO.isOk()) {
             return responseVO;
@@ -139,7 +170,7 @@ public class P2PMessageService {
 
         SendMessageResp resp = new SendMessageResp();
         MessageContent message = new MessageContent();
-        BeanUtils.copyProperties(req,message);
+        BeanUtils.copyProperties(req, message);
 
         //在回包之前持久化
         messageStoreService.storeP2PMessage(message);

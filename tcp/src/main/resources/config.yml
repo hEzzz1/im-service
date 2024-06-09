@@ -29,4 +29,4 @@ lim:
     password: 7355608
   zkConfig:
     zkAddr: 192.168.192.129:2181
-    zkConnectTimeOut: 5000
+    zkConnectTimeOut: 100000

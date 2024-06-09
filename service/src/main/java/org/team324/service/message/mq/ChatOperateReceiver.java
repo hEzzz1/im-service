@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.model.message.MessageContent;
+import org.team324.common.model.message.MessageReceiveAckContent;
+import org.team324.service.message.service.MessageSyncService;
 import org.team324.service.message.service.P2PMessageService;
 
 import java.util.Map;
@@ -35,6 +37,9 @@ public class ChatOperateReceiver {
     @Autowired
     P2PMessageService p2PMessageService;
 
+    @Autowired
+    MessageSyncService messageSyncService;
+
     @RabbitListener(
             bindings = @QueueBinding(
              value = @Queue(value = Constants.RabbitConstants.Im2MessageService,
@@ -51,7 +56,6 @@ public class ChatOperateReceiver {
         // 消息标签
         Long deliveryTag = (Long) headers.get(AmqpHeaders.DELIVERY_TAG);
         try {
-
             JSONObject jsonObject = JSON.parseObject(msg);
             Integer command = jsonObject.getInteger("command");
             if (command.equals(MessageCommand.MSG_P2P.getCommand())) {
@@ -60,6 +64,12 @@ public class ChatOperateReceiver {
                         = jsonObject.toJavaObject(MessageContent.class);
 
                 p2PMessageService.process(messageContent);
+            }else if (command.equals(MessageCommand.MSG_RECIVE_ACK.getCommand())) {
+                // 消息接受确认
+                MessageReceiveAckContent messageContent
+                        = jsonObject.toJavaObject(MessageReceiveAckContent.class);
+
+                messageSyncService.receiveMark(messageContent);
             }
             channel.basicAck(deliveryTag, false);
         }catch (Exception e) {

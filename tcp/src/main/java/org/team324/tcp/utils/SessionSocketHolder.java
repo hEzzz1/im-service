@@ -32,7 +32,7 @@ public class SessionSocketHolder {
         dto.setUserId(userId);
         dto.setClientType(clientType);
         dto.setImei(imei);
-        CHANNELS.put(dto,channel);
+        CHANNELS.put(dto, channel);
     }
 
     public static NioSocketChannel get(Integer appId, String userId, Integer clientType, String imei) {
@@ -75,39 +75,45 @@ public class SessionSocketHolder {
 
     /**
      * 退出
+     *
      * @param nioSocketChannel
      */
     public static void removeUserSession(NioSocketChannel nioSocketChannel) {
         String userId = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get();
         Integer appId = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.AppId)).get();
         Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
-        String imei = (String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
-        SessionSocketHolder.remove(appId, userId, clientType,imei);
+        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
+        SessionSocketHolder.remove(appId, userId, clientType, imei);
         RedissonClient redissonClient = RedisManager.getRedissonClient();
         RMap<Object, Object> map = redissonClient.getMap(appId + Constants.RedisConstants.UserSessionConstant + userId);
-        map.remove(clientType+":"+imei);
+        map.remove(clientType + ":" + imei);
         nioSocketChannel.close();
     }
 
     /**
      * 离线
+     *
      * @param nioSocketChannel
      */
     public static void offlineUserSession(NioSocketChannel nioSocketChannel) {
+        log.info("进入了offlineUserSession");
         String userId = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.UserId)).get();
         Integer appId = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.AppId)).get();
         Integer clientType = (Integer) nioSocketChannel.attr(AttributeKey.valueOf(Constants.ClientType)).get();
-        String imei = (String)nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
+        String imei = (String) nioSocketChannel.attr(AttributeKey.valueOf(Constants.Imei)).get();
         SessionSocketHolder.remove(appId, userId, clientType, imei);
         RedissonClient redissonClient = RedisManager.getRedissonClient();
-        RMap<Object, Object> map = redissonClient.getMap(appId + Constants.RedisConstants.UserSessionConstant + userId);
-        String sessionStr = (String) map.get(clientType.toString());
+        RMap<String, String> map = redissonClient.getMap(appId + Constants.RedisConstants.UserSessionConstant + userId);
+        String sessionStr = map.get(clientType.toString() + ":" + imei);
 
-        if (!StringUtils.isNotBlank(sessionStr)) {
+        // 判断是否为空
+        // 如果不为空 则对redis中的数据进行修改
+        if (!StringUtils.isBlank(sessionStr)) {
             UserSession userSession = JSONObject.parseObject(sessionStr, UserSession.class);
             userSession.setConnectStatus(ImConnectStatusEnum.OFFLINE_STATUS.getCode());
-            map.put(clientType.toString() + ":" + imei,JSONObject.toJSONString(userSession));
+            map.put(clientType.toString() + ":" + imei, JSONObject.toJSONString(userSession));
         }
+
         nioSocketChannel.close();
     }
 

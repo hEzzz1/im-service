@@ -16,7 +16,7 @@ import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.team324.codec.pack.LoginPack;
-import org.team324.codec.pack.Message.ChatMessageAck;
+import org.team324.codec.pack.message.ChatMessageAck;
 import org.team324.codec.proto.Message;
 import org.team324.codec.proto.MessagePack;
 import org.team324.common.ResponseVO;
@@ -116,7 +116,6 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
         } else if (command == SystemCommand.PING.getCommand()) {
             ctx.channel().attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
         }else if (command == MessageCommand.MSG_P2P.getCommand()) {
-
             CheckSendMessageReq req = new CheckSendMessageReq();
             req.setAppId(msg.getMessageHeader().getAppId());
             req.setCommand(msg.getMessageHeader().getCommand());
@@ -125,17 +124,15 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             String toId = jsonObject.getString("toId");
             req.setFromId(fromId);
             req.setToId(toId);
-
-            // TODO 1.调用校验消息发送方接口
+            //  1.调用校验消息发送方接口
             ResponseVO responseVO = feignMessageService.checkSendMessage(req);
-
             // 如果成功投递到mq
             if (responseVO.isOk()) {
                 MqMessageProducer.sendMessage(msg, command);
             }
             // 失败则直接mq
             else {
-                // TODO ACK
+                //  ACK
                 ChatMessageAck chatMessageAck = new ChatMessageAck(jsonObject.getString("messageId"));
                 responseVO.setData(chatMessageAck);
                 MessagePack<ResponseVO> ack = new MessagePack<>();
@@ -147,6 +144,14 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             MqMessageProducer.sendMessage(msg, command);
         }
 
+    }
+
+//    表示 channel 处于不活动状态
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        //设置离线
+        SessionSocketHolder.offlineUserSession((NioSocketChannel) ctx.channel());
+        ctx.close();
     }
 
     @Override
