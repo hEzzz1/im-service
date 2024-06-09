@@ -131,16 +131,22 @@ public class ImFriendServiceImpl implements ImFriendShipService {
         } else {
             // 走好友申请的流程
             // 插入一条好友申请的数据
-            ResponseVO responseVO = imFriendShipRequestService.addFriendRequest(req.getFromId(), req.getToItem(), req.getAppId());
-            if (!responseVO.isOk()) {
-                return responseVO;
+            QueryWrapper<ImFriendShipEntity> query = new QueryWrapper<>();
+            query.eq("app_id", req.getAppId());
+            query.eq("from_id", req.getFromId());
+            query.eq("to_id", req.getToItem().getToId());
+            ImFriendShipEntity fromItem = imFriendShipMapper.selectOne(query);
+            if (fromItem == null || fromItem.getStatus() != FriendShipStatusEnum.FRIEND_STATUS_NORMAL.getCode()) {
+                ResponseVO responseVO = imFriendShipRequestService.addFriendRequest(req.getFromId(), req.getToItem(), req.getAppId());
+                if (!responseVO.isOk()) {
+                    return responseVO;
+                }
+            }else {
+                // 已经是好友
+                return ResponseVO.errorResponse(FriendShipErrorCode.TO_IS_YOUR_FRIEND);
             }
-
         }
-
-
-        return this.doAddFriend(req, req.getFromId(), req.getToItem(), req.getAppId());
-    }
+        return ResponseVO.successResponse();    }
 
     @Override
     public ResponseVO updateFriend(UpdateFriendReq req) {
@@ -514,8 +520,16 @@ public class ImFriendServiceImpl implements ImFriendShipService {
             toItem.setBlack(FriendShipStatusEnum.BLACK_STATUS_NORMAL.getCode());
             int result = imFriendShipMapper.insert(toItem);
         }
+        // 不等于null
+        else {
+            if (toItem.getStatus() != FriendShipStatusEnum.FRIEND_STATUS_NORMAL.getCode()) {
+                ImFriendShipEntity update = new ImFriendShipEntity();
+                update.setStatus(FriendShipStatusEnum.FRIEND_STATUS_NORMAL.getCode());
+                imFriendShipMapper.update(update, toQuery);
+            }
+        }
 
-        // TODO tcp通知 A + B
+        //  tcp通知 A + B
         //  既要更新A 又要更新B
         // A通知其他端 B通知所有端
         // from
