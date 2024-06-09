@@ -82,7 +82,7 @@ public class P2PMessageService {
         Integer appId = messageContent.getAppId();
 
         // 用messageId从缓存中取出
-        MessageContent messageFromMessageIdCache = messageStoreService.getMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId());
+        MessageContent messageFromMessageIdCache = messageStoreService.getMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId(), MessageContent.class);
         if (messageFromMessageIdCache != null) {
             // 不需要持久化
             threadPoolExecutor.execute(() -> {
@@ -126,7 +126,7 @@ public class P2PMessageService {
             List<ClientInfo> list = dispatchMessage(messageContent);
 
             // 将messageId存到缓存
-            messageStoreService.setMessageFromMessageIdCache(messageContent);
+            messageStoreService.setMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId(), messageContent);
 
             if (list.isEmpty()) {
                 // 发送接受确认给发送方 需要带上服务端发送标识

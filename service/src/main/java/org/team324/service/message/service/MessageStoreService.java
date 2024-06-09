@@ -10,10 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.DelFlagEnum;
-import org.team324.common.model.message.DoStoreP2PMessageDto;
-import org.team324.common.model.message.GroupChatMessageContent;
-import org.team324.common.model.message.ImMessageBody;
-import org.team324.common.model.message.MessageContent;
+import org.team324.common.model.message.*;
 import org.team324.service.message.dao.ImGroupMessageHistoryEntity;
 import org.team324.service.message.dao.ImMessageBodyEntity;
 import org.team324.service.message.dao.ImMessageHistoryEntity;
@@ -121,18 +118,15 @@ public class MessageStoreService {
     @Transactional
     public void storeGroupMessage(GroupChatMessageContent messageContent) {
 
-//        // messageContent 转化成 messageBody
-//        ImMessageBody messageBody = extractMessageBody(messageContent);
-//
-//        // 插入messageBody
-//        imMessageBodyMapper.insert(messageBody);
-//        // 转化成messageHistory
-//        // 读扩散
-//        ImGroupMessageHistoryEntity imGroupMessageHistoryEntity = extractToGroupMessageHistory(messageContent, messageBody);
-//        imGroupMessageHistoryMapper.insert(imGroupMessageHistoryEntity);
-//        messageContent.setMessageKey(messageBody.getMessageKey());
-
-
+        // messageContent 转化成 messageBody
+        ImMessageBody messageBody = extractMessageBody(messageContent);
+        DoStoreGroupMessageDto dto = new DoStoreGroupMessageDto();
+        dto.setMessageBody(messageBody);
+        dto.setGroupChatMessageContent(messageContent);
+        rabbitTemplate.convertAndSend(Constants.RabbitConstants.StoreGroupMessage
+                , ""
+                , JSONObject.toJSONString(dto));
+        messageContent.setMessageKey(messageBody.getMessageKey());
     }
 
     private ImGroupMessageHistoryEntity extractToGroupMessageHistory(GroupChatMessageContent messageContent, ImMessageBodyEntity messageBody) {
@@ -151,11 +145,11 @@ public class MessageStoreService {
      * 向缓存中插入数据
      * @param messageContent
      */
-    public void setMessageFromMessageIdCache(MessageContent messageContent) {
+    public void setMessageFromMessageIdCache(Integer appId, String messageId, Object messageContent) {
 
         // redis
         // key = appId : cache : messageId
-        String key = messageContent.getAppId() + ":" + Constants.RedisConstants.cacheMessage + ":" + messageContent.getMessageId();
+        String key = appId + ":" + Constants.RedisConstants.cacheMessage + ":" + messageId;
         stringRedisTemplate.opsForValue().set(key,JSONObject.toJSONString(messageContent),3000, TimeUnit.SECONDS);
     }
 
@@ -165,7 +159,7 @@ public class MessageStoreService {
      * @param messageId
      * @return
      */
-    public MessageContent getMessageFromMessageIdCache(Integer appId, String messageId) {
+    public <T> T getMessageFromMessageIdCache(Integer appId, String messageId, Class<T> clazz) {
 
         // redis
         // key = appId : cache : messageId
@@ -175,7 +169,7 @@ public class MessageStoreService {
             return null;
         }
 
-        return JSONObject.parseObject(msg, MessageContent.class);
+        return JSONObject.parseObject(msg, clazz);
 
     }
 

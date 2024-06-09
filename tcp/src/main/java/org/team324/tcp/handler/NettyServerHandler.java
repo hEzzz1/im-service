@@ -22,6 +22,7 @@ import org.team324.codec.proto.MessagePack;
 import org.team324.common.ResponseVO;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.ImConnectStatusEnum;
+import org.team324.common.enums.command.GroupEventCommand;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.enums.command.SystemCommand;
 import org.team324.common.model.UserClientDto;
@@ -115,30 +116,49 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             SessionSocketHolder.removeUserSession((NioSocketChannel) ctx.channel());
         } else if (command == SystemCommand.PING.getCommand()) {
             ctx.channel().attr(AttributeKey.valueOf(Constants.ReadTime)).set(System.currentTimeMillis());
-        }else if (command == MessageCommand.MSG_P2P.getCommand()) {
-            CheckSendMessageReq req = new CheckSendMessageReq();
-            req.setAppId(msg.getMessageHeader().getAppId());
-            req.setCommand(msg.getMessageHeader().getCommand());
-            JSONObject jsonObject = JSONObject.parseObject(JSONObject.toJSONString(msg.getMessagePack()));
-            String fromId = jsonObject.getString("fromId");
-            String toId = jsonObject.getString("toId");
-            req.setFromId(fromId);
-            req.setToId(toId);
-            //  1.调用校验消息发送方接口
-            ResponseVO responseVO = feignMessageService.checkSendMessage(req);
-            // 如果成功投递到mq
-            if (responseVO.isOk()) {
-                MqMessageProducer.sendMessage(msg, command);
-            }
-            // 失败则直接mq
-            else {
-                //  ACK
-                ChatMessageAck chatMessageAck = new ChatMessageAck(jsonObject.getString("messageId"));
-                responseVO.setData(chatMessageAck);
-                MessagePack<ResponseVO> ack = new MessagePack<>();
-                ack.setData(responseVO);
-                ack.setCommand(MessageCommand.MSG_ACK.getCommand());
-                ctx.channel().writeAndFlush(ack);
+        }else if (command == MessageCommand.MSG_P2P.getCommand()
+        || command == GroupEventCommand.MSG_GROUP.getCommand()) {
+            try {
+                CheckSendMessageReq req = new CheckSendMessageReq();
+                req.setAppId(msg.getMessageHeader().getAppId());
+                req.setCommand(msg.getMessageHeader().getCommand());
+                JSONObject jsonObject = JSONObject.parseObject(JSONObject.toJSONString(msg.getMessagePack()));
+                String fromId = jsonObject.getString("fromId");
+                String toId = "";
+
+                if (command == MessageCommand.MSG_P2P.getCommand()) {
+                    toId = jsonObject.getString("toId");
+                } else {
+                    toId = jsonObject.getString("groupId");
+                }
+
+                req.setFromId(fromId);
+                req.setToId(toId);
+
+                //  1.调用校验消息发送方接口
+                ResponseVO responseVO = feignMessageService.checkSendMessage(req);
+                // 如果成功投递到mq
+                if (responseVO.isOk()) {
+                    MqMessageProducer.sendMessage(msg, command);
+                }
+                // 失败则直接mq
+                else {
+                    Integer ackCommand = 0;
+                    if (command == MessageCommand.MSG_P2P.getCommand()) {
+                        ackCommand = MessageCommand.MSG_ACK.getCommand();
+                    } else {
+                        ackCommand = GroupEventCommand.GROUP_MSG_ACK.getCommand();
+                    }
+                    //  ACK
+                    ChatMessageAck chatMessageAck = new ChatMessageAck(jsonObject.getString("messageId"));
+                    responseVO.setData(chatMessageAck);
+                    MessagePack<ResponseVO> ack = new MessagePack<>();
+                    ack.setData(responseVO);
+                    ack.setCommand(ackCommand);
+                    ctx.channel().writeAndFlush(ack);
+                }
+            }catch (Exception e) {
+                logger.info(e.getMessage());
             }
         }else {
             MqMessageProducer.sendMessage(msg, command);
