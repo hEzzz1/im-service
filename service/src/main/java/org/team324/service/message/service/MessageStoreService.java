@@ -1,9 +1,11 @@
 package org.team324.service.message.service;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.team324.common.constant.Constants;
@@ -22,6 +24,7 @@ import org.team324.service.utils.SnowflakeIdWorker;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author crystalZ
@@ -44,6 +47,9 @@ public class MessageStoreService {
 
     @Autowired
     RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
 
 
     @Transactional
@@ -140,5 +146,39 @@ public class MessageStoreService {
         return result;
 
     }
+
+    /**
+     * 向缓存中插入数据
+     * @param messageContent
+     */
+    public void setMessageFromMessageIdCache(MessageContent messageContent) {
+
+        // redis
+        // key = appId : cache : messageId
+        String key = messageContent.getAppId() + ":" + Constants.RedisConstants.cacheMessage + ":" + messageContent.getMessageId();
+        stringRedisTemplate.opsForValue().set(key,JSONObject.toJSONString(messageContent),3000, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 从缓存中取出数据
+     * @param appId
+     * @param messageId
+     * @return
+     */
+    public MessageContent getMessageFromMessageIdCache(Integer appId, String messageId) {
+
+        // redis
+        // key = appId : cache : messageId
+        String key = appId + ":" + Constants.RedisConstants.cacheMessage + ":" + messageId;
+        String msg = stringRedisTemplate.opsForValue().get(key);
+        if (StringUtils.isBlank(msg)) {
+            return null;
+        }
+
+        return JSONObject.parseObject(msg, MessageContent.class);
+
+    }
+
+
 
 }

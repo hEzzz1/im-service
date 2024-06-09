@@ -76,24 +76,45 @@ public class P2PMessageService {
         // 校验用户是否被禁言 是否被禁用
         // 发送方和接收方是否是好友 ？ 非绝对 开关实现 表记录值
 
-        // 0. 前置校验
+        // 前置校验
         String fromId = messageContent.getFromId();
         String toId = messageContent.getToId();
         Integer appId = messageContent.getAppId();
+
+        // 用messageId从缓存中取出
+        MessageContent messageFromMessageIdCache = messageStoreService.getMessageFromMessageIdCache(messageContent.getAppId(), messageContent.getMessageId());
+        if (messageFromMessageIdCache != null) {
+            // 不需要持久化
+            threadPoolExecutor.execute(() -> {
+                // 1. 回ACK给自己
+                ack(messageFromMessageIdCache, ResponseVO.successResponse());
+                // 2. 发消息给同步端
+                syncToSender(messageFromMessageIdCache, messageFromMessageIdCache);
+                // 3. 发消息给对象在线端
+                // list为对方在线端列表
+                List<ClientInfo> list = dispatchMessage(messageFromMessageIdCache);
+                if (list.isEmpty()) {
+                    // 发送接受确认给发送方 需要带上服务端发送标识
+                    revicerAck(messageFromMessageIdCache);
+                }
+            });
+            return;
+        }
+
         // 校验前置
 //        ResponseVO responseVO = imServerPermissionCheck(fromId, toId, appId);
 //        if (responseVO.isOk()) {
         // 线程池最好是流式的 不需要分支 轻量化
         // 将任务提交到线程池池
-        threadPoolExecutor.execute(() -> {
+        // key = appId : Seq : userId (fromId + toId) / groupId
+        long seq = redisSeq.doGetSeq(
+                messageContent.getAppId() + ":"
+                        + Constants.SeqConstants.Message + ":"
+                        + ConversationIdGenerate.generateP2PId(messageContent.getFromId(),messageContent.getToId()));
+        // 分配seq序列号
+        messageContent.setMessageSequence(seq);
 
-            // key = appId : Seq : userId (fromId + toId) / groupId
-            long seq = redisSeq.doGetSeq(
-                    messageContent.getAppId() + ":"
-                            + Constants.SeqConstants.Message + ":"
-                            + ConversationIdGenerate.generateP2PId(messageContent.getFromId(),messageContent.getToId()));
-            // 分配seq序列号
-            messageContent.setMessageSequence(seq);
+        threadPoolExecutor.execute(() -> {
             //在回包之前持久化
             messageStoreService.storeP2PMessage(messageContent);
             // 1. 回ACK给自己
@@ -103,6 +124,10 @@ public class P2PMessageService {
             // 3. 发消息给对象在线端
             // list为对方在线端列表
             List<ClientInfo> list = dispatchMessage(messageContent);
+
+            // 将messageId存到缓存
+            messageStoreService.setMessageFromMessageIdCache(messageContent);
+
             if (list.isEmpty()) {
                 // 发送接受确认给发送方 需要带上服务端发送标识
                 revicerAck(messageContent);
