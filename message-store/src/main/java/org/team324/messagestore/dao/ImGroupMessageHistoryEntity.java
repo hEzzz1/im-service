@@ -1,5 +1,6 @@
 package org.team324.messagestore.dao;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
@@ -7,6 +8,7 @@ import lombok.Data;
  * @date 2024/6/9
  */
 @Data
+@TableName("im_group_message_history")
 public class ImGroupMessageHistoryEntity {
     private Integer appId;
 

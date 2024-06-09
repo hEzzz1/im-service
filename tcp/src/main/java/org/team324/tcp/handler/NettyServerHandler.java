@@ -65,6 +65,7 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
     protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
 
         Integer command = msg.getMessageHeader().getCommand();
+        logger.info("received command: {}", command);
         // 登录command
         if (command == SystemCommand.LOGIN.getCommand()) {
 
@@ -125,7 +126,6 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
                 JSONObject jsonObject = JSONObject.parseObject(JSONObject.toJSONString(msg.getMessagePack()));
                 String fromId = jsonObject.getString("fromId");
                 String toId = "";
-
                 if (command == MessageCommand.MSG_P2P.getCommand()) {
                     toId = jsonObject.getString("toId");
                 } else {
@@ -137,6 +137,8 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
 
                 //  1.调用校验消息发送方接口
                 ResponseVO responseVO = feignMessageService.checkSendMessage(req);
+                // TODO 如果是群聊消息请求 必出错
+                //  因为校验消息发送 没有区分是群聊消息还是单聊消息 后期可能会做出修改
                 // 如果成功投递到mq
                 if (responseVO.isOk()) {
                     MqMessageProducer.sendMessage(msg, command);

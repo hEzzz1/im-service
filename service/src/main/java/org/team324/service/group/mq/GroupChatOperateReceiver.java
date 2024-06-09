@@ -2,6 +2,7 @@ package org.team324.service.group.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,9 @@ import org.team324.common.constant.Constants;
 import org.team324.common.enums.command.GroupEventCommand;
 import org.team324.common.model.message.GroupChatMessageContent;
 import org.team324.common.model.message.MessageContent;
+import org.team324.common.model.message.MessageReadContent;
 import org.team324.service.group.service.GroupMessageService;
+import org.team324.service.message.service.MessageSyncService;
 
 import java.util.Map;
 
@@ -34,6 +37,9 @@ public class GroupChatOperateReceiver {
 
     @Autowired
     GroupMessageService  groupMessageService;
+
+    @Autowired
+    MessageSyncService messageSyncService;
 
     @RabbitListener(
             bindings = @QueueBinding(
@@ -59,6 +65,11 @@ public class GroupChatOperateReceiver {
                 GroupChatMessageContent messageContent
                         = jsonObject.toJavaObject(GroupChatMessageContent.class);
                 groupMessageService.process(messageContent);
+            }else if (command.equals(GroupEventCommand.MSG_GROUP_READED.getCommand())) {
+                MessageReadContent messageRead = JSON.parseObject(msg, new TypeReference<MessageReadContent>() {
+
+                }.getType());
+                messageSyncService.groupReadMark(messageRead);
             }
             channel.basicAck(deliveryTag, false);
         }catch (Exception e) {

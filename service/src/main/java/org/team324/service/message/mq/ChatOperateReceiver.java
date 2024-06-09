@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.model.message.MessageContent;
+import org.team324.common.model.message.MessageReadContent;
 import org.team324.common.model.message.MessageReceiveAckContent;
 import org.team324.service.message.service.MessageSyncService;
 import org.team324.service.message.service.P2PMessageService;
@@ -70,6 +71,11 @@ public class ChatOperateReceiver {
                         = jsonObject.toJavaObject(MessageReceiveAckContent.class);
 
                 messageSyncService.receiveMark(messageContent);
+            }else if (command.equals(MessageCommand.MSG_READED.getCommand())) {
+                // 消息接受确认
+                MessageReadContent messageContent
+                        = jsonObject.toJavaObject(MessageReadContent.class);
+                messageSyncService.readMark(messageContent);
             }
             channel.basicAck(deliveryTag, false);
         }catch (Exception e) {
