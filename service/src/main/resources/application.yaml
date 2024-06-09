@@ -68,6 +68,8 @@ appConfig:
   privateKey: 123456
   sendMessageCheckFriend: false # 发送消息是否校验关系链
   sendMessageCheckBlack: false # 发送消息是否校验黑名单
+  offlineMessageCount: 1000 #离线消息存储条数
+  deleteConversationSyncMode: 1 # 是否开启多端同步 1 开启 0 关闭  可以改成false true
 
 #logging:
 #  config: classpath:logback-spring.xml
