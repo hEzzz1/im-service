@@ -70,7 +70,6 @@ public class ImFriendServiceImpl implements ImFriendShipService {
 
         if (req.getFriendItem().size() > 100) {
             // TODO 返回超出长度
-
             return ResponseVO.errorResponse(FriendShipErrorCode.IMPORT_SIZE_BEYOND);
         }
 
