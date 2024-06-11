@@ -8,6 +8,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.team324.codec.pack.friendship.*;
 import org.team324.common.ResponseVO;
 import org.team324.common.config.AppConfig;
@@ -19,6 +20,8 @@ import org.team324.common.enums.FriendShipStatusEnum;
 import org.team324.common.enums.command.FriendshipEventCommand;
 import org.team324.common.exception.ApplicationException;
 import org.team324.common.model.RequestBase;
+import org.team324.common.model.SyncReq;
+import org.team324.common.model.SyncResp;
 import org.team324.service.friendship.dao.ImFriendShipEntity;
 import org.team324.service.friendship.dao.mapper.ImFriendShipMapper;
 import org.team324.service.friendship.model.req.*;
@@ -37,6 +40,7 @@ import org.team324.service.utils.MessageProducer;
 import org.team324.service.utils.WriteUserSeq;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -459,6 +463,42 @@ public class ImFriendServiceImpl implements ImFriendShipService {
         }
 
         return ResponseVO.successResponse(result);
+    }
+
+    /**
+     * 好友增量拉取
+     * @param req
+     * @return
+     */
+    @Override
+    public ResponseVO syncFriendshipList(SyncReq req) {
+        // 每次最多拉取100
+        if (req.getMaxLimit() > 100 ) {
+            req.setMaxLimit(100);
+        }
+
+        SyncResp<ImFriendShipEntity> resp = new SyncResp<>();
+        // seq > req.getseq limit maxLimit
+        QueryWrapper<ImFriendShipEntity> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.eq("app_id", req.getAppId());
+        queryWrapper.eq("from_id", req.getOperater());
+        queryWrapper.gt("friend_sequencr", req.getLastSequence());
+        queryWrapper.last("limit" + req.getMaxLimit());
+        queryWrapper.orderByAsc("friend_sequence");
+        List<ImFriendShipEntity> list = imFriendShipMapper.selectList(queryWrapper);
+
+        if (!CollectionUtils.isEmpty(list)) {
+            ImFriendShipEntity maxSeqEntity = list.get(list.size() - 1);
+            resp.setDataList(list);
+            // 设置最大seq
+            Long friendShipMaxSeq = imFriendShipMapper.getFriendShipMaxSeq(req.getAppId(), req.getOperater());
+            resp.setMaxSequence(friendShipMaxSeq);
+            // 是否拉取完毕
+            resp.setCompleted(maxSeqEntity.getFriendSequence() >= friendShipMaxSeq);
+            return ResponseVO.successResponse(resp);
+        }
+        resp.setCompleted(true);
+        return ResponseVO.successResponse(resp);
     }
 
 

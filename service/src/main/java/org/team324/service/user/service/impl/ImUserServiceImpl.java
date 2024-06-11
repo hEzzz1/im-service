@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.team324.codec.pack.user.UserModifyPack;
@@ -16,6 +17,7 @@ import org.team324.common.enums.DelFlagEnum;
 import org.team324.common.enums.UserErrorCode;
 import org.team324.common.enums.command.UserEventCommand;
 import org.team324.common.exception.ApplicationException;
+import org.team324.service.group.service.ImGroupService;
 import org.team324.service.user.dao.ImUserDataEntity;
 import org.team324.service.user.dao.mapper.ImUserDataMapper;
 import org.team324.service.user.model.req.*;
@@ -28,6 +30,7 @@ import org.team324.service.utils.MessageProducer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author crystalZ
@@ -48,6 +51,12 @@ public class ImUserServiceImpl implements ImUserService {
 
     @Autowired
     MessageProducer messageProducer;
+
+    @Autowired
+    StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    ImGroupService imGroupService;
 
 
     @Override
@@ -202,5 +211,13 @@ public class ImUserServiceImpl implements ImUserService {
     @Override
     public ResponseVO login(LoginReq req) {
         return ResponseVO.successResponse();
+    }
+
+    @Override
+    public ResponseVO getUserSequence(GetUserSequenceReq req) {
+        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
+        Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(),req.getAppId());
+        map.put(Constants.SeqConstants.Group,groupSeq);
+        return ResponseVO.successResponse(map);
     }
 }

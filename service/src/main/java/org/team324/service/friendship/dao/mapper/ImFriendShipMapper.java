@@ -90,12 +90,12 @@ public interface ImFriendShipMapper extends BaseMapper<ImFriendShipEntity> {
             "</script>"
     )
     List<CheckFriendShipResp> checkFriendShipBlackBoth(CheckFriendShipReq toId);
-//
-//    @Select(" select max(friend_sequence) from im_friendship where app_id = #{appId} AND from_id = #{userId} ")
-//    Long getFriendShipMaxSeq(Integer appId,String userId);
-//
-//    @Select(
-//            " select to_id from im_friendship where from_id = #{userId} AND app_id = #{appId} and status = 1 and black = 1 "
-//    )
-//    List<String> getAllFriendId(String userId,Integer appId);
+
+    @Select(" select max(friend_sequence) from im_friendship where app_id = #{appId} AND from_id = #{userId} ")
+    Long getFriendShipMaxSeq(Integer appId,String userId);
+
+    @Select(
+            " select to_id from im_friendship where from_id = #{userId} AND app_id = #{appId} and status = 1 and black = 1 "
+    )
+    List<String> getAllFriendId(String userId,Integer appId);
 }

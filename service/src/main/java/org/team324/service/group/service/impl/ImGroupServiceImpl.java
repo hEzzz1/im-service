@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ import org.team324.common.enums.GroupTypeEnum;
 import org.team324.common.enums.command.GroupEventCommand;
 import org.team324.common.exception.ApplicationException;
 import org.team324.common.model.ClientInfo;
+import org.team324.common.model.SyncReq;
+import org.team324.common.model.SyncResp;
 import org.team324.service.group.dao.ImGroupEntity;
 import org.team324.service.group.dao.mapper.ImGroupMapper;
 import org.team324.service.group.model.callback.DestroyGroupCallbackDto;
@@ -30,6 +33,7 @@ import org.team324.service.group.model.resp.GetGroupResp;
 import org.team324.service.group.model.resp.GetRoleInGroupResp;
 import org.team324.service.group.service.ImGroupMemberService;
 import org.team324.service.group.service.ImGroupService;
+import org.team324.service.seq.RedisSeq;
 import org.team324.service.utils.CallbackService;
 import org.team324.service.utils.GroupMessageProducer;
 
@@ -59,6 +63,9 @@ public class ImGroupServiceImpl implements ImGroupService {
 
     @Autowired
     GroupMessageProducer groupMessageProducer;
+
+    @Autowired
+    RedisSeq redisSeq;
 
     @Override
     public ResponseVO importGroup(ImportGroupReq req) {
@@ -124,6 +131,10 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity imGroupEntity = new ImGroupEntity();
+
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        imGroupEntity.setSequence(seq);
+
         imGroupEntity.setCreateTime(System.currentTimeMillis());
         imGroupEntity.setStatus(GroupStatusEnum.NORMAL.getCode());
         BeanUtils.copyProperties(req, imGroupEntity);
@@ -201,7 +212,9 @@ public class ImGroupServiceImpl implements ImGroupService {
         }
 
         ImGroupEntity imGroupEntity = new ImGroupEntity();
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
         BeanUtils.copyProperties(req, imGroupEntity);
+        imGroupEntity.setSequence(seq);
         QueryWrapper<ImGroupEntity> query = new QueryWrapper<>();
         query.eq("app_id", req.getAppId());
         query.eq("group_id", req.getGroupId());
@@ -297,6 +310,8 @@ public class ImGroupServiceImpl implements ImGroupService {
             }
         }
         ImGroupEntity update = new ImGroupEntity();
+        long seq = redisSeq.doGetSeq(req.getAppId() + ":" + Constants.SeqConstants.Group);
+        update.setSequence(seq);
         update.setStatus(GroupStatusEnum.DESTROY.getCode());
         int update1 = imGroupMapper.update(update, objectQueryWrapper);
         if (update1 != 1) {
@@ -314,6 +329,7 @@ public class ImGroupServiceImpl implements ImGroupService {
         //TCP 通知
         DestroyGroupPack pack = new DestroyGroupPack();
         pack.setGroupId(req.getGroupId());
+        pack.setSequence(seq);
         groupMessageProducer.producer(req.getOperater(),
                 GroupEventCommand.DESTROY_GROUP, pack, new ClientInfo(req.getAppId(), req.getClientType(), req.getImei()));
 
@@ -392,5 +408,57 @@ public class ImGroupServiceImpl implements ImGroupService {
         imGroupMapper.update(update,wrapper);
 
         return ResponseVO.successResponse();
+    }
+
+    @Override
+    public ResponseVO syncJoinedGroupList(SyncReq req) {
+        if(req.getMaxLimit() > 100){
+            req.setMaxLimit(100);
+        }
+
+        SyncResp<ImGroupEntity> resp = new SyncResp<>();
+
+        ResponseVO<Collection<String>> memberJoinedGroup = imGroupMemberService.syncMemberJoinedGroup(req.getOperater(), req.getAppId());
+        if(memberJoinedGroup.isOk()){
+
+            Collection<String> data = memberJoinedGroup.getData();
+            QueryWrapper<ImGroupEntity> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("app_id",req.getAppId());
+            queryWrapper.in("group_id",data);
+            queryWrapper.gt("sequence",req.getLastSequence());
+            queryWrapper.last(" limit " + req.getMaxLimit());
+            queryWrapper.orderByAsc("sequence");
+
+            List<ImGroupEntity> list = imGroupMapper.selectList(queryWrapper);
+
+            if(!CollectionUtils.isEmpty(list)){
+                ImGroupEntity maxSeqEntity
+                        = list.get(list.size() - 1);
+                resp.setDataList(list);
+                //设置最大seq
+                Long maxSeq =
+                        imGroupMapper.getGroupMaxSeq(data, req.getAppId());
+                resp.setMaxSequence(maxSeq);
+                //设置是否拉取完毕
+                resp.setCompleted(maxSeqEntity.getSequence() >= maxSeq);
+                return ResponseVO.successResponse(resp);
+            }
+
+        }
+        resp.setCompleted(true);
+        return ResponseVO.successResponse(resp);
+    }
+
+    @Override
+    public Long getUserGroupMaxSeq(String userId, Integer appId) {
+
+        ResponseVO<Collection<String>> memberJoinedGroup = imGroupMemberService.syncMemberJoinedGroup(userId, appId);
+        if(!memberJoinedGroup.isOk()){
+            throw new ApplicationException(500,"");
+        }
+        Long maxSeq =
+                imGroupMapper.getGroupMaxSeq(memberJoinedGroup.getData(),
+                        appId);
+        return maxSeq;
     }
 }

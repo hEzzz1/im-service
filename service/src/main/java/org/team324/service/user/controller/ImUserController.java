@@ -10,6 +10,7 @@ import org.team324.common.route.RouteHandle;
 import org.team324.common.route.RouteInfo;
 import org.team324.common.utils.RouteInfoParseUtil;
 import org.team324.service.user.model.req.DeleteUserReq;
+import org.team324.service.user.model.req.GetUserSequenceReq;
 import org.team324.service.user.model.req.ImportUserReq;
 import org.team324.service.user.model.req.LoginReq;
 import org.team324.service.user.service.ImUserService;
@@ -88,5 +89,15 @@ public class ImUserController {
 
         }
         return ResponseVO.errorResponse();
+    }
+
+    /**
+     *
+     */
+    @RequestMapping("/getUserSequence")
+    public ResponseVO getUserSequence(@RequestBody @Validated
+                                      GetUserSequenceReq req, Integer appId) {
+        req.setAppId(appId);
+        return imUserService.getUserSequence(req);
     }
 }

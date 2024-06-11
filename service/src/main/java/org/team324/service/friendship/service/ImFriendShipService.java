@@ -2,6 +2,7 @@ package org.team324.service.friendship.service;
 
 import org.team324.common.ResponseVO;
 import org.team324.common.model.RequestBase;
+import org.team324.common.model.SyncReq;
 import org.team324.service.friendship.model.req.*;
 
 public interface ImFriendShipService {
@@ -30,4 +31,5 @@ public interface ImFriendShipService {
 
     public ResponseVO checkBlck(CheckFriendShipReq req);
 
+    public ResponseVO syncFriendshipList(SyncReq req);
 }

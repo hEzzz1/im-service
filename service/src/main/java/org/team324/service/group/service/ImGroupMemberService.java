@@ -37,5 +37,7 @@ public interface ImGroupMemberService {
 
     public List<GroupMemberDto> getGroupManager(String groupId, Integer appId);
 
+    public ResponseVO<Collection<String>> syncMemberJoinedGroup(String operater, Integer appId);
+
 
 }

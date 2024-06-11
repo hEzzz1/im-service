@@ -14,7 +14,7 @@ public interface ImGroupMapper extends BaseMapper<ImGroupEntity> {
     /**
      * @description 获取加入的群的最大seq
      * @author chackylee
-     * @param []
+     * @param
      * @return java.lang.Long
      */
     @Select(" <script> " +

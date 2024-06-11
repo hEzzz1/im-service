@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.team324.common.ResponseVO;
+import org.team324.common.model.SyncReq;
 import org.team324.service.friendship.model.req.*;
 import org.team324.service.friendship.service.ImFriendShipService;
 
@@ -151,6 +153,13 @@ public class ImFriendShipController {
     public ResponseVO checkBlck(@RequestBody @Validated CheckFriendShipReq req, Integer appId){
         req.setAppId(appId);
         return imFriendShipService.checkBlck(req);
+    }
+
+    @RequestMapping("/syncFriendList")
+    public ResponseVO syncFriendshipList(@RequestBody @Validated
+                                         SyncReq req, Integer appId) {
+        req.setAppId(appId);
+        return imFriendShipService.syncFriendshipList(req);
     }
 
 }

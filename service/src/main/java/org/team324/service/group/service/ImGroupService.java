@@ -1,6 +1,7 @@
 package org.team324.service.group.service;
 
 import org.team324.common.ResponseVO;
+import org.team324.common.model.SyncReq;
 import org.team324.service.group.dao.ImGroupEntity;
 import org.team324.service.group.model.req.*;
 
@@ -24,4 +25,7 @@ public interface ImGroupService {
 
     public ResponseVO muteGroup(MuteGroupReq req);
 
+    public ResponseVO syncJoinedGroupList(SyncReq req);
+
+    public Long getUserGroupMaxSeq(String userId, Integer appId);
 }

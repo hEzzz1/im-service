@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.team324.common.ResponseVO;
+import org.team324.common.model.SyncReq;
 import org.team324.service.conversation.model.DeleteConversationReq;
 import org.team324.service.conversation.model.UpdateConversationReq;
 import org.team324.service.conversation.service.ConversationService;
@@ -33,5 +34,13 @@ public class ConversationController {
                                                  req, Integer appId) {
         req.setAppId(appId);
         return conversationService.updateConversation(req);
+    }
+
+    @RequestMapping("/syncConversationList")
+    public ResponseVO syncConversationList(@RequestBody @Validated
+                                           SyncReq req, Integer appId) {
+        req.setAppId(appId);
+        return conversationService.syncConversationSet(req);
+
     }
 }

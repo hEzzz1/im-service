@@ -75,9 +75,9 @@ appConfig:
 #  config: classpath:logback-spring.xml
 server:
   port: 8080
-#mybatis-plus:
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 httpclient:
   maxTotal: 100
