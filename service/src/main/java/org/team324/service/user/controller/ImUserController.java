@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 用户操作API
  * @author crystalZ
  * @date 2024/5/28
  */
@@ -35,13 +36,24 @@ public class ImUserController {
     @Autowired
     ZKit zKit;
 
+    /**
+     * 批量导入用户接口
+     * @param req
+     * @param appId
+     * @return
+     */
     @PostMapping("importUser")
     public ResponseVO importUser(@RequestBody ImportUserReq req,Integer appId) {
         req.setAppId(appId);
         return imUserService.importUser(req);
     }
 
-
+    /**
+     * 删除用户接口
+     * @param req
+     * @param appId
+     * @return
+     */
     @DeleteMapping("/deleteUser")
     public ResponseVO deleteUser(@RequestBody @Validated DeleteUserReq req, Integer appId) {
         req.setAppId(appId);
@@ -49,7 +61,8 @@ public class ImUserController {
     }
 
     /**
-     * im的登录接口，返回im地址
+     * im的登录接口
+     * 返回im地址
      * @param req
      * @param appId
      * @return
@@ -59,7 +72,7 @@ public class ImUserController {
         req.setAppId(appId);
         ResponseVO login = imUserService.login(req);
         if (login.isOk()) {
-            // TODO 去zk获取一个im的地址 返回给sdk
+            // 去zk获取一个im的地址 返回给sdk
             List<String> allNode = new ArrayList<>();
             if (req.getClientType() == ClientType.WEB.getCode()) {
                 allNode = zKit.getAllWebNode();

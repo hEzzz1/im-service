@@ -18,4 +18,6 @@ public interface ImFriendShipGroupService {
 
     public ResponseVO<ImFriendShipGroupEntity> getGroup(String fromId, String groupName, Integer appId);
 
+    public Long updateSeq(String fromId, String groupName, Integer appId);
+
 }

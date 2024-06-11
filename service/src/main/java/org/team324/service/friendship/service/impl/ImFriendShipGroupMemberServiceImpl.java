@@ -17,9 +17,11 @@ import org.team324.service.friendship.model.req.AddFriendShipGroupMemberReq;
 import org.team324.service.friendship.model.req.DeleteFriendShipGroupMemberReq;
 import org.team324.service.friendship.service.ImFriendShipGroupMemberService;
 import org.team324.service.friendship.service.ImFriendShipGroupService;
+import org.team324.service.seq.RedisSeq;
 import org.team324.service.user.dao.ImUserDataEntity;
 import org.team324.service.user.service.ImUserService;
 import org.team324.service.utils.MessageProducer;
+import org.team324.service.utils.WriteUserSeq;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,11 +70,14 @@ public class ImFriendShipGroupMemberServiceImpl
             }
         }
 
+        Long seq = imFriendShipGroupService.updateSeq(req.getFromId(), req.getGroupName(), req.getAppId());
+
         // TCP 通知
         AddFriendGroupMemberPack pack = new AddFriendGroupMemberPack();
         pack.setFromId(req.getFromId());
         pack.setGroupName(req.getGroupName());
         pack.setToIds(successId);
+        pack.setSequence(seq);
         messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_MEMBER_ADD,
                 pack,new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
 
@@ -98,10 +103,15 @@ public class ImFriendShipGroupMemberServiceImpl
                 }
             }
         }
+
+        Long seq = imFriendShipGroupService.updateSeq(req.getFromId(), req.getGroupName(), req.getAppId());
+
+
         DeleteFriendGroupMemberPack pack = new DeleteFriendGroupMemberPack();
         pack.setFromId(req.getFromId());
         pack.setGroupName(req.getGroupName());
         pack.setToIds(successId);
+        pack.setSequence(seq);
         messageProducer.sendToUserExceptClient(req.getFromId(), FriendshipEventCommand.FRIEND_GROUP_MEMBER_DELETE,
                 pack,new ClientInfo(req.getAppId(),req.getClientType(),req.getImei()));
 
