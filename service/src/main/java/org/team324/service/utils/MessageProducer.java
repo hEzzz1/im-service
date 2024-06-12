@@ -68,7 +68,6 @@ public class MessageProducer {
     }
 
     // 发送给所有端的方法
-
     public List<ClientInfo> sendToUser(String toId, Command command, Object data, Integer appId) {
         List<UserSession> sessions = userSessionUtils.getUserSessions(appId, toId);
 
@@ -98,7 +97,6 @@ public class MessageProducer {
     }
 
     // 发送给某个用户的指定客户端
-
     public void sendToUser(String toId, Command command, Object data, ClientInfo clientInfo) {
 
         UserSession session = userSessionUtils.getUserSessions(clientInfo.getAppId(), toId, clientInfo.getClientType(), clientInfo.getImei());
@@ -106,9 +104,7 @@ public class MessageProducer {
         sendPack(toId, command, data, session);
 
     }
-
     //发送给除了某一端的其他端
-
     public void sendToUserExceptClient(String toId, Command command, Object data, ClientInfo clientInfo) {
         List<UserSession> userSession = userSessionUtils.getUserSessions(clientInfo.getAppId(), toId);
         for (UserSession session : userSession) {
@@ -117,7 +113,6 @@ public class MessageProducer {
             }
         }
     }
-
     private boolean isMatch(UserSession sessionDto, ClientInfo clientInfo) {
         return Objects.equals(sessionDto.getAppId(), clientInfo.getAppId()) && Objects.equals(sessionDto.getImei(), clientInfo.getImei()) && Objects.equals(sessionDto.getClientType(), clientInfo.getClientType());
     }

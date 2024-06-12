@@ -3,6 +3,7 @@ package org.team324.common.route;
 import lombok.Data;
 
 /**
+ * 路由信息
  * @author crystalZ
  * @date 2024/6/5
  */
