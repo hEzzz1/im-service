@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.team324.codec.pack.LoginPack;
 import org.team324.codec.pack.message.ChatMessageAck;
+import org.team324.codec.pack.user.LoginAckPack;
+import org.team324.codec.pack.user.UserStatusChangeNotifyPack;
 import org.team324.codec.proto.Message;
 import org.team324.codec.proto.MessagePack;
 import org.team324.common.ResponseVO;
@@ -25,6 +27,7 @@ import org.team324.common.enums.ImConnectStatusEnum;
 import org.team324.common.enums.command.GroupEventCommand;
 import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.enums.command.SystemCommand;
+import org.team324.common.enums.command.UserEventCommand;
 import org.team324.common.model.UserClientDto;
 import org.team324.common.model.UserSession;
 import org.team324.common.model.message.CheckSendMessageReq;
@@ -112,6 +115,22 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<Message> {
             RTopic topic = redissonClient.getTopic(Constants.RedisConstants.UserLoginChannel);
             topic.publish(JSONObject.toJSONString(dto));
 
+            // 上下线
+            UserStatusChangeNotifyPack userStatusChangeNotifyPack = new UserStatusChangeNotifyPack();
+            userStatusChangeNotifyPack.setAppId(msg.getMessageHeader().getAppId());
+            userStatusChangeNotifyPack.setUserId(loginPack.getUserId());
+            userStatusChangeNotifyPack.setStatus(ImConnectStatusEnum.ONLINE_STATUS.getCode());
+            MqMessageProducer.sendMessage(userStatusChangeNotifyPack,msg.getMessageHeader(), UserEventCommand.USER_ONLINE_STATUS_CHANGE.getCommand());
+
+            // 登录ack
+            MessagePack<LoginAckPack> loginSuccess = new MessagePack<>();
+            LoginAckPack loginAckPack = new LoginAckPack();
+            loginAckPack.setUserId(loginPack.getUserId());
+            loginSuccess.setCommand(SystemCommand.LOGINACK.getCommand());
+            loginSuccess.setData(loginAckPack);
+            loginSuccess.setImei(msg.getMessageHeader().getImei());
+            loginSuccess.setAppId(msg.getMessageHeader().getAppId());
+            ctx.channel().writeAndFlush(loginSuccess);
 
         } else if (command == SystemCommand.LOGOUT.getCommand()) {
             SessionSocketHolder.removeUserSession((NioSocketChannel) ctx.channel());

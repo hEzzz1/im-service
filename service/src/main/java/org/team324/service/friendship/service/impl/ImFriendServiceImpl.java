@@ -39,10 +39,7 @@ import org.team324.service.utils.CallbackService;
 import org.team324.service.utils.MessageProducer;
 import org.team324.service.utils.WriteUserSeq;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -499,6 +496,11 @@ public class ImFriendServiceImpl implements ImFriendShipService {
         }
         resp.setCompleted(true);
         return ResponseVO.successResponse(resp);
+    }
+
+    @Override
+    public List<String> getAllFriendId(String userId, Integer appId) {
+        return imFriendShipMapper.getAllFriendId(userId,appId);
     }
 
 

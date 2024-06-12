@@ -8,17 +8,16 @@ package org.team324.common.enums.command;
 public enum UserEventCommand implements Command {
 
     //用户修改command 4000
-    USER_MODIFY(4000),
+    USER_MODIFY(0xFA0),
 
     //4001
-    USER_ONLINE_STATUS_CHANGE(4001),
-
+    USER_ONLINE_STATUS_CHANGE(0xFA1),
 
     //4004 用户在线状态通知报文
-    USER_ONLINE_STATUS_CHANGE_NOTIFY(4004),
+    USER_ONLINE_STATUS_CHANGE_NOTIFY(0xFA4),
 
     //4005 用户在线状态通知同步报文
-    USER_ONLINE_STATUS_CHANGE_NOTIFY_SYNC(4005),
+    USER_ONLINE_STATUS_CHANGE_NOTIFY_SYNC(0xFA5),
 
 
     ;

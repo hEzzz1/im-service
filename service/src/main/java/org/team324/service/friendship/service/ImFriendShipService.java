@@ -5,6 +5,8 @@ import org.team324.common.model.RequestBase;
 import org.team324.common.model.SyncReq;
 import org.team324.service.friendship.model.req.*;
 
+import java.util.List;
+
 public interface ImFriendShipService {
 
     public ResponseVO importFriendShip(ImportFriendShipReq req);
@@ -32,4 +34,6 @@ public interface ImFriendShipService {
     public ResponseVO checkBlck(CheckFriendShipReq req);
 
     public ResponseVO syncFriendshipList(SyncReq req);
+
+    public List<String> getAllFriendId(String userId, Integer appId);
 }

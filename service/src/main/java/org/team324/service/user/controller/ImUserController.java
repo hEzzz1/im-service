@@ -9,11 +9,9 @@ import org.team324.common.model.ClientType;
 import org.team324.common.route.RouteHandle;
 import org.team324.common.route.RouteInfo;
 import org.team324.common.utils.RouteInfoParseUtil;
-import org.team324.service.user.model.req.DeleteUserReq;
-import org.team324.service.user.model.req.GetUserSequenceReq;
-import org.team324.service.user.model.req.ImportUserReq;
-import org.team324.service.user.model.req.LoginReq;
+import org.team324.service.user.model.req.*;
 import org.team324.service.user.service.ImUserService;
+import org.team324.service.user.service.ImUserStatusService;
 import org.team324.service.utils.ZKit;
 
 import java.util.ArrayList;
@@ -36,6 +34,9 @@ public class ImUserController {
 
     @Autowired
     ZKit zKit;
+
+    @Autowired
+    ImUserStatusService imUserStatusService;
 
     /**
      * 批量导入用户接口
@@ -99,5 +100,23 @@ public class ImUserController {
                                       GetUserSequenceReq req, Integer appId) {
         req.setAppId(appId);
         return imUserService.getUserSequence(req);
+    }
+
+
+    /**
+     * 临时订阅某个账户
+     * redis
+     * @param req
+     * @param appId
+     * @param identifier
+     * @return
+     */
+    @RequestMapping("/subscribeUserOnlineStatus")
+    public ResponseVO subscribeUserOnlineStatus(@RequestBody @Validated
+                                                SubscribeUserOnlineStatusReq req, Integer appId, String identifier) {
+        req.setAppId(appId);
+        req.setOperater(identifier);
+        imUserStatusService.subscribeUserOnlineStatus(req);
+        return ResponseVO.successResponse();
     }
 }
