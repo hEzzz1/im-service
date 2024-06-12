@@ -1,5 +1,6 @@
 package org.team324.service.message.service;
 
+import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.team324.codec.pack.message.ChatMessageAck;
 import org.team324.codec.pack.message.MessageReciverServerAckPack;
 import org.team324.common.ResponseVO;
+import org.team324.common.config.AppConfig;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.ConversationTypeEnum;
 import org.team324.common.enums.command.MessageCommand;
@@ -17,6 +19,7 @@ import org.team324.common.model.message.OfflineMessageContent;
 import org.team324.service.message.model.req.SendMessageReq;
 import org.team324.service.message.model.resp.SendMessageResp;
 import org.team324.service.seq.RedisSeq;
+import org.team324.service.utils.CallbackService;
 import org.team324.service.utils.ConversationIdGenerate;
 import org.team324.service.utils.MessageProducer;
 
@@ -47,6 +50,12 @@ public class P2PMessageService {
 
     @Autowired
     RedisSeq redisSeq;
+
+    @Autowired
+    AppConfig appConfig;
+
+    @Autowired
+    CallbackService callbackService;
 
     // 线程池
     private final ThreadPoolExecutor threadPoolExecutor;
@@ -122,6 +131,18 @@ public class P2PMessageService {
             return;
         }
 
+        //回调
+        ResponseVO responseVO = ResponseVO.successResponse();
+        if(appConfig.isSendMessageAfterCallback()){
+            responseVO = callbackService.beforeCallback(messageContent.getAppId(), Constants.CallbackCommand.SendMessageBefore
+                    , JSONObject.toJSONString(messageContent));
+        }
+
+        if(!responseVO.isOk()){
+            ack(messageContent,responseVO);
+            return;
+        }
+
         // 校验前置
 //        ResponseVO responseVO = imServerPermissionCheck(fromId, toId, appId);
 //        if (responseVO.isOk()) {
@@ -159,6 +180,11 @@ public class P2PMessageService {
             if (list.isEmpty()) {
                 // 发送接受确认给发送方 需要带上服务端发送标识
                 revicerAck(messageContent);
+            }
+
+            if(appConfig.isSendMessageAfterCallback()){
+                callbackService.callback(messageContent.getAppId(),Constants.CallbackCommand.SendMessageAfter,
+                        JSONObject.toJSONString(messageContent));
             }
         });
 

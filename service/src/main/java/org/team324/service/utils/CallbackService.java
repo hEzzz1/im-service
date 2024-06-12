@@ -26,14 +26,18 @@ public class CallbackService {
     @Autowired
     AppConfig appConfig;
 
+    @Autowired
+    ShareThreadPool shareThreadPool;
+
     public void callback(Integer appId, String callbackCommand, String jsonBody) {
-
-        try {
-            httpRequestUtils.doPost(appConfig.getCallbackUrl(), Object.class, builderUrlParams(appId, callbackCommand), jsonBody, null);
-        } catch (Exception e) {
-            logger.error("callback 回调{} ： {} 出现异常：{} ", callbackCommand, appId, e.getMessage());
-        }
-
+        shareThreadPool.submit(() -> {
+            try {
+                httpRequestUtils.doPost(appConfig.getCallbackUrl(),Object.class,builderUrlParams(appId,callbackCommand),
+                        jsonBody,null);
+            }catch (Exception e){
+                logger.error("callback 回调{} : {}出现异常 ： {} ",callbackCommand , appId, e.getMessage());
+            }
+        });
     }
 
     public ResponseVO beforeCallback(Integer appId, String callbackCommand, String jsonBody) {

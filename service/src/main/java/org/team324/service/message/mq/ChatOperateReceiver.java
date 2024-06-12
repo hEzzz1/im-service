@@ -2,6 +2,7 @@ package org.team324.service.message.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +21,12 @@ import org.team324.common.enums.command.MessageCommand;
 import org.team324.common.model.message.MessageContent;
 import org.team324.common.model.message.MessageReadContent;
 import org.team324.common.model.message.MessageReceiveAckContent;
+import org.team324.common.model.message.RecallMessageContent;
 import org.team324.service.message.service.MessageSyncService;
 import org.team324.service.message.service.P2PMessageService;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author crystalZ
@@ -76,6 +79,11 @@ public class ChatOperateReceiver {
                 MessageReadContent messageContent
                         = jsonObject.toJavaObject(MessageReadContent.class);
                 messageSyncService.readMark(messageContent);
+            }else if (Objects.equals(command, MessageCommand.MSG_RECALL.getCommand())) {
+//                撤回消息
+                RecallMessageContent messageContent = JSON.parseObject(msg, new TypeReference<RecallMessageContent>() {
+                }.getType());
+                messageSyncService.recallMessage(messageContent);
             }
             channel.basicAck(deliveryTag, false);
         }catch (Exception e) {
