@@ -303,14 +303,18 @@ public class ImUserServiceImpl implements ImUserService {
             BeanUtils.copyProperties(req, pack);
             // 调用sendToUser发送给当前用户的所有端
             // 用于保持数据一致性
-            messageProducer.sendToUser(req.getUserId(), req.getClientType(), req.getImei(), UserEventCommand.USER_MODIFY, pack, req.getAppId());
+            messageProducer
+                    .sendToUser(req.getUserId(), req.getClientType()
+                            , req.getImei(), UserEventCommand.USER_MODIFY, pack, req.getAppId());
 
             // 回调
             // 判断当前app是否配置修改用户信息后进行进行回调的功能
             if (appConfig.isModifyUserAfterCallback()) {
                 // 如果配置了回调功能则进行回调操作
                 // 传入当前appId 回调命令 JSON格式的请求实体
-                callbackService.callback(req.getAppId(), Constants.CallbackCommand.ModifyUserAfter, JSONObject.toJSONString(req));
+                callbackService
+                        .callback(req.getAppId()
+                                , Constants.CallbackCommand.ModifyUserAfter, JSONObject.toJSONString(req));
             }
             // 操作成功 返回成功结果
             return ResponseVO.successResponse();
@@ -342,7 +346,9 @@ public class ImUserServiceImpl implements ImUserService {
     @Override
     public ResponseVO getUserSequence(GetUserSequenceReq req) {
         // 从 Redis 中获取用户的序列信息
-        Map<Object, Object> map = stringRedisTemplate.opsForHash().entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
+        Map<Object, Object> map = stringRedisTemplate
+                .opsForHash()
+                .entries(req.getAppId() + ":" + Constants.RedisConstants.SeqPrefix + ":" + req.getUserId());
         // 获取用户在指定应用中的群组最大序列号
         Long groupSeq = imGroupService.getUserGroupMaxSeq(req.getUserId(), req.getAppId());
         // 将群组最大序列号存入序列信息中
