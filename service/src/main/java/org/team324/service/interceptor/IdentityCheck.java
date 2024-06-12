@@ -8,11 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.team324.common.BaseErrorCode;
+import org.team324.common.ResponseVO;
 import org.team324.common.config.AppConfig;
 import org.team324.common.constant.Constants;
 import org.team324.common.enums.GateWayErrorCode;
+import org.team324.common.enums.ImUserTypeEnum;
 import org.team324.common.exception.ApplicationExceptionEnum;
 import org.team324.common.utils.SigAPI;
+import org.team324.service.user.dao.ImUserDataEntity;
 import org.team324.service.user.service.ImUserService;
 
 import java.util.concurrent.TimeUnit;
@@ -29,80 +32,102 @@ public class IdentityCheck {
     @Autowired
     ImUserService imUserService;
 
+    //10000 123456 10001 123456789
     @Autowired
     AppConfig appConfig;
 
     @Autowired
     StringRedisTemplate stringRedisTemplate;
 
-    public ApplicationExceptionEnum checkUserSign(String identifier
-            , String appId, String userSig) {
+    public ApplicationExceptionEnum checkUserSig(String identifier,
+                                                 String appId,String userSig){
 
-        // 从缓存中取
-        String cachUserSig = stringRedisTemplate.opsForValue()
-                .get(appId + ":" + Constants.RedisConstants.userSign + ":" + identifier + userSig);
-
-        if (!StringUtils.isBlank(cachUserSig)
-                && Long.parseLong(cachUserSig) > System.currentTimeMillis() / 1000) {
+        String cacheUserSig = stringRedisTemplate.opsForValue()
+                .get(appId + ":" + Constants.RedisConstants.userSign + ":"
+                        + identifier + userSig);
+        if(!StringUtils.isBlank(cacheUserSig) && Long.valueOf(cacheUserSig)
+                >  System.currentTimeMillis() / 1000){
+            this.setIsAdmin(identifier,Integer.valueOf(appId));
             return BaseErrorCode.SUCCESS;
         }
 
-
-        // 获取密钥
+        //获取秘钥
         String privateKey = appConfig.getPrivateKey();
 
-        // 根据appid + 密钥创建sigApi
-//        SigAPI sigAPI = new SigAPI(Long.valueOf(appId), privateKey);
+        //根据appid + 秘钥创建sigApi
+        SigAPI sigAPI = new SigAPI(Long.valueOf(appId), privateKey);
 
-        // 调用sigApi对userSig 解密
-        JSONObject jsonObject = SigAPI.decodeUserSig(userSig);
+        //调用sigApi对userSig解密
+        JSONObject jsonObject = sigAPI.decodeUserSig(userSig);
 
-        // 取出解密后的appId 和 操作人 过期时间做匹配 不通过提示错误
+        //取出解密后的appid 和 操作人 和 过期时间做匹配，不通过则提示错误
         Long expireTime = 0L;
         Long expireSec = 0L;
+        Long time = 0L;
         String decoerAppId = "";
         String decoderidentifier = "";
 
         try {
             decoerAppId = jsonObject.getString("TLS.appId");
             decoderidentifier = jsonObject.getString("TLS.identifier");
-            String expireStr = jsonObject.getString("TLS.expire").toString();
-            String expireTimeStr = jsonObject.getString("TLS.expireTime").toString();
+            String expireStr = jsonObject.get("TLS.expire").toString();
+            String expireTimeStr = jsonObject.get("TLS.expireTime").toString();
+            time = Long.valueOf(expireTimeStr);
             expireSec = Long.valueOf(expireStr);
             expireTime = Long.valueOf(expireTimeStr) + expireSec;
-        } catch (Exception e) {
+        }catch (Exception e){
             e.printStackTrace();
-            logger.error("checkUserSig-error : {}", e.getMessage());
+            logger.error("checkUserSig-error:{}",e.getMessage());
         }
 
-        if (!decoderidentifier.equals(identifier)) {
+        if(!decoderidentifier.equals(identifier)){
             return GateWayErrorCode.USERSIGN_OPERATE_NOT_MATE;
         }
 
-        if (!decoerAppId.equals(appId)) {
+        if(!decoerAppId.equals(appId)){
             return GateWayErrorCode.USERSIGN_IS_ERROR;
         }
 
-        if (expireSec == 0L) {
+        if(expireSec == 0L){
             return GateWayErrorCode.USERSIGN_IS_EXPIRED;
         }
 
-        if (expireTime < System.currentTimeMillis() / 1000) {
+        if(expireTime < System.currentTimeMillis() / 1000){
             return GateWayErrorCode.USERSIGN_IS_EXPIRED;
         }
 
-        // appId + "xxx" + userId + Sign
+        //appid + "xxx" + userId + sign
+        String genSig = sigAPI.genUserSig(identifier, expireSec,time,null);
+        if (genSig.toLowerCase().equals(userSig.toLowerCase()))
+        {
+            String key = appId + ":" + Constants.RedisConstants.userSign + ":"
+                    +identifier + userSig;
 
-        String key = appId + ":" + Constants.RedisConstants.userSign + ":" + identifier + userSig;
+            Long etime = expireTime - System.currentTimeMillis() / 1000;
+            stringRedisTemplate.opsForValue().set(
+                    key,expireTime.toString(),etime, TimeUnit.SECONDS
+            );
+            this.setIsAdmin(identifier,Integer.valueOf(appId));
+            return BaseErrorCode.SUCCESS;
+        }
 
-        Long etime = expireTime - System.currentTimeMillis() / 1000;
-
-        stringRedisTemplate.opsForValue()
-                .set(key, expireTime.toString(), etime, TimeUnit.SECONDS);
-
-
-        return BaseErrorCode.SUCCESS;
+        return GateWayErrorCode.USERSIGN_IS_ERROR;
     }
 
 
+    /**
+     * 根据appid,identifier判断是否App管理员,并设置到RequestHolder
+     * @param identifier
+     * @param appId
+     * @return
+     */
+    public void setIsAdmin(String identifier, Integer appId) {
+        //去DB或Redis中查找, 后面写
+        ResponseVO<ImUserDataEntity> singleUserInfo = imUserService.getSingleUserInfo(identifier, appId);
+        if(singleUserInfo.isOk()){
+            RequestHolder.set(singleUserInfo.getData().getUserType() == ImUserTypeEnum.APP_ADMIN.getCode());
+        }else{
+            RequestHolder.set(false);
+        }
+    }
 }
